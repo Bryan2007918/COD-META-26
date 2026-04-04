@@ -5,167 +5,287 @@ import { doc, setDoc, getDoc, collection, getDocs, updateDoc, runTransaction } f
 
 var EVENTO = {
   id: "codigo26",
-  nombre: "Rumbo al Mundial Codigo 26",
+  nombre: "Código 26",
+  subNombre: "Rumbo al Mundial",
   fecha: "3 de mayo de 2026",
   fechaObj: new Date(2026, 4, 3, 7, 0, 0),
   dist: "5K",
-  ubicacion: "Ciclopista Rio Mayo, Cuernavaca, Morelos",
+  ubicacion: "Cuernavaca, Morelos",
   hora: "7:00 AM",
   cupoMax: 200,
   estado: "proximo",
   ruta: [
-    { punto: "Salida", lugar: "City Market (Juan Pablo II) - Punto de reunion", km: "0.0" },
-    { punto: "Tramo 1", lugar: "Sales por Av. Juan Pablo II hacia el sur", km: "0.3" },
-    { punto: "Tramo 2", lugar: "Giras a la izquierda en Avenida Rio Mayo", km: "0.8" },
-    { punto: "Tramo 3", lugar: "Giras a la derecha en Avenida Teopanzolco", km: "1.5" },
-    { punto: "Tramo 4", lugar: "Glorieta, giras a la derecha en Calle Rio Tepozteco", km: "2.2" },
-    { punto: "Tramo 5", lugar: "Continuas derecho hasta Avenida San Diego", km: "3.0" },
-    { punto: "Tramo 6", lugar: "Pasas el Hospital San Diego (hidratacion)", km: "3.8" },
-    { punto: "Tramo 7", lugar: "Giras a la derecha en Juan Pablo II", km: "4.3" },
-    { punto: "Meta (5K)", lugar: "City Market (Juan Pablo II) - LLEGADA", km: "5.0" },
+    { punto: "Salida", lugar: "City Market (Juan Pablo II)", km: "0.0" },
+    { punto: "Tramo 1", lugar: "Av. Juan Pablo II hacia el sur", km: "0.3" },
+    { punto: "Tramo 2", lugar: "Avenida Río Mayo", km: "0.8" },
+    { punto: "Tramo 3", lugar: "Avenida Teopanzolco", km: "1.5" },
+    { punto: "Tramo 4", lugar: "Glorieta Calle Río Tepozteco", km: "2.2" },
+    { punto: "Tramo 5", lugar: "Avenida San Diego", km: "3.0" },
+    { punto: "Hidratación", lugar: "Hospital San Diego", km: "3.8" },
+    { punto: "Tramo 7", lugar: "Juan Pablo II", km: "4.3" },
+    { punto: "Meta", lugar: "City Market (Juan Pablo II)", km: "5.0" },
   ],
-  rutaInfo: "Distancia: 5 km\nSuperficie: Calles pavimentadas\nElevacion: ~30 m\nHidratacion: Km 2.2 (glorieta) y Km 3.8 (Hospital San Diego)\nRuta cerrada con seguridad vial\nSalida y meta: City Market, Juan Pablo II",
 };
 
-var CUPONES = [
-  { id:1, titulo:"Cupon #1 - Top 10", desc:"Recompensa exclusiva para Top 10 varonil y femenil. Proximamente.", icono:"🎁", color:"#FF4D6A" },
-  { id:2, titulo:"Cupon #2 - Top 10", desc:"Descuento en tienda deportiva. Proximamente.", icono:"👟", color:"#F5A623" },
-  { id:3, titulo:"Cupon #3 - Top 10", desc:"Beneficio de patrocinador. Proximamente.", icono:"🏋️", color:"#00D4FF" },
-  { id:4, titulo:"Cupon #4 - Top 10", desc:"Recompensa por tu desempeno. Proximamente.", icono:"🎯", color:"#10B981" },
-  { id:5, titulo:"Cupon #5 - Top 10", desc:"Premio especial de la organizacion. Proximamente.", icono:"⭐", color:"#8B5CF6" },
-];
+var C = {
+  bg: "#07080F",
+  surface: "#0E1018",
+  card: "#13151F",
+  cardHover: "#181B26",
+  accent: "#FF3D5A",
+  accentDim: "rgba(255,61,90,0.12)",
+  gold: "#F0A500",
+  goldDim: "rgba(240,165,0,0.12)",
+  cyan: "#00C2E0",
+  cyanDim: "rgba(0,194,224,0.1)",
+  green: "#00C896",
+  greenDim: "rgba(0,200,150,0.1)",
+  muted: "#505570",
+  mutedLight: "#7B82A0",
+  border: "rgba(255,255,255,0.05)",
+  borderLight: "rgba(255,255,255,0.09)",
+  text: "#E8EAF2",
+  textSub: "#9BA1BC",
+};
 
-var C = { bg:"#0A0D1B", card:"#111528", cardL:"#181D35", accent:"#FF4D6A", gold:"#F5A623", cyan:"#00D4FF", green:"#10B981", muted:"#6B7194", border:"rgba(255,255,255,0.06)", purple:"#8B5CF6" };
+var styles = {
+  page: { maxWidth: 430, margin: "0 auto", minHeight: "100vh", background: C.bg, fontFamily: "'Inter','SF Pro Display',system-ui,sans-serif", color: C.text, position: "relative" },
+  header: { padding: "52px 24px 24px", display: "flex", alignItems: "center", gap: 12 },
+  backBtn: { width: 36, height: 36, borderRadius: "50%", background: C.card, border: "1px solid " + C.border, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, fontSize: 16 },
+  card: { background: C.card, borderRadius: 20, border: "1px solid " + C.border },
+  pill: { padding: "4px 12px", borderRadius: 20, fontSize: 11, fontWeight: 600, letterSpacing: 0.3 },
+  label: { display: "block", fontSize: 12, fontWeight: 600, color: C.mutedLight, marginBottom: 8, letterSpacing: 0.3 },
+  input: { width: "100%", background: C.card, borderRadius: 14, padding: "16px 18px", fontSize: 15, color: C.text, border: "1px solid " + C.border, outline: "none", boxSizing: "border-box", marginBottom: 16, fontFamily: "inherit", transition: "border 0.2s" },
+  btnPrimary: { width: "100%", padding: "17px 20px", borderRadius: 16, background: "linear-gradient(135deg, #FF3D5A, #D4002D)", color: "#FFF", fontSize: 15, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.3 },
+  btnSecondary: { width: "100%", padding: "15px 20px", borderRadius: 16, background: C.card, color: C.text, fontSize: 15, fontWeight: 600, border: "1px solid " + C.borderLight, cursor: "pointer", fontFamily: "inherit" },
+  btnGhost: { background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", color: C.accent, fontWeight: 700, fontSize: 14 },
+  tabBar: { position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 430, background: C.surface, borderTop: "1px solid " + C.border, display: "flex", justifyContent: "space-around", padding: "10px 0 28px", zIndex: 100, backdropFilter: "blur(20px)" },
+};
 
 function padT(n) { return String(n).padStart(2, "0"); }
-function secsToTime(s) { var h = Math.floor(s/3600), m = Math.floor((s%3600)/60), ss = s%60; return padT(h)+":"+padT(m)+":"+padT(ss); }
-function timeToSecs(t) { if (!t) return 0; var p = t.split(":").map(Number); return p[0]*3600+p[1]*60+(p[2]||0); }
-function calcRitmo(timeStr, km) { var s = timeToSecs(timeStr); if (!s||!km) return "-"; var mpk = (s/60)/km; var m = Math.floor(mpk), ss = Math.round((mpk-m)*60); return m+":"+padT(ss); }
+function secsToTime(s) { var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60; return padT(h) + ":" + padT(m) + ":" + padT(ss); }
+function timeToSecs(t) { if (!t) return 99999; var p = t.split(":").map(Number); return p[0] * 3600 + p[1] * 60 + (p[2] || 0); }
+function calcRitmo(t, km) { var s = timeToSecs(t); if (!s || s === 99999 || !km) return "--'--\""; var mpk = (s / 60) / km, m = Math.floor(mpk), ss = Math.round((mpk - m) * 60); return m + "'" + padT(ss) + "\""; }
+function ini(n) { return n ? n.split(" ").map(function(x) { return x[0]; }).slice(0, 2).join("").toUpperCase() : "?"; }
 
-function Countdown(props) {
-  var _s = useState({ d:0, h:0, m:0, s:0, past:false }), l = _s[0], setL = _s[1];
+// ── COUNTDOWN ──
+function Countdown({ target }) {
+  var [l, setL] = useState({ d: 0, h: 0, m: 0, s: 0, past: false });
   useEffect(function() {
-    function calc() { var d = props.target - new Date(); if (d<=0) return setL({ d:0,h:0,m:0,s:0,past:true }); setL({ d:Math.floor(d/864e5), h:Math.floor((d%864e5)/36e5), m:Math.floor((d%36e5)/6e4), s:Math.floor((d%6e4)/1e3), past:false }); }
-    calc(); var iv = setInterval(calc, 1000); return function() { clearInterval(iv); };
-  }, [props.target]);
-  if (l.past) return <div style={{ fontSize:14, color:C.green, fontWeight:700, textAlign:"center" }}>EVENTO FINALIZADO - Resultados disponibles</div>;
-  return <div style={{ display:"flex", gap:10, justifyContent:"center" }}>
-    {[{v:l.d,u:"DIAS"},{v:l.h,u:"HRS"},{v:l.m,u:"MIN"},{v:l.s,u:"SEG"}].map(function(x) {
-      return <div key={x.u} style={{ background:C.card, borderRadius:12, padding:"10px 14px", textAlign:"center", border:"0.5px solid "+C.border, minWidth:56 }}>
-        <div style={{ fontSize:26, fontWeight:900, fontFamily:"'JetBrains Mono',monospace", color:C.cyan }}>{String(x.v||0).padStart(2,"0")}</div>
-        <div style={{ fontSize:9, color:C.muted, letterSpacing:2, marginTop:2 }}>{x.u}</div>
-      </div>;
-    })}
-  </div>;
-}
-
-function Cronometro(props) {
-  var _t = useState(0), elapsed = _t[0], setElapsed = _t[1];
-  var _running = useState(false), running = _running[0], setRunning = _running[1];
-  var startRef = useRef(null);
-  var ivRef = useRef(null);
-  function start() { startRef.current = Date.now() - elapsed*1000; ivRef.current = setInterval(function() { setElapsed(Math.floor((Date.now()-startRef.current)/1000)); }, 1000); setRunning(true); }
-  function stop() { clearInterval(ivRef.current); setRunning(false); }
-  function reset() { clearInterval(ivRef.current); setRunning(false); setElapsed(0); }
-  useEffect(function() { return function() { clearInterval(ivRef.current); }; }, []);
-  var timeStr = secsToTime(elapsed);
-  return <div style={{ background:C.card, borderRadius:20, padding:24, textAlign:"center", border:"0.5px solid "+C.border, marginBottom:16 }}>
-    <div style={{ fontSize:11, fontWeight:700, color:C.cyan, letterSpacing:3, marginBottom:12 }}>CRONOMETRO</div>
-    <div style={{ fontSize:52, fontWeight:900, fontFamily:"'JetBrains Mono',monospace", color:running?C.green:C.cyan, marginBottom:20 }}>{timeStr}</div>
-    <div style={{ display:"flex", gap:10, justifyContent:"center", marginBottom:16 }}>
-      {!running ? <button style={{ padding:"12px 28px", borderRadius:12, background:C.green, color:"#FFF", fontWeight:700, border:"none", cursor:"pointer", fontSize:15 }} onClick={start}>▶ Iniciar</button>
-      : <button style={{ padding:"12px 28px", borderRadius:12, background:C.accent, color:"#FFF", fontWeight:700, border:"none", cursor:"pointer", fontSize:15 }} onClick={stop}>⏸ Pausar</button>}
-      <button style={{ padding:"12px 20px", borderRadius:12, background:"rgba(255,255,255,0.06)", color:"#FFF", fontWeight:700, border:"1px solid rgba(255,255,255,0.1)", cursor:"pointer", fontSize:15 }} onClick={reset}>↺</button>
-    </div>
-    {!running && elapsed > 0 && <button style={{ width:"100%", padding:14, borderRadius:12, background:C.accent, color:"#FFF", fontWeight:800, border:"none", cursor:"pointer", fontSize:15 }} onClick={function() { props.onGuardar(timeStr); }}>✅ Registrar este tiempo ({timeStr})</button>}
-  </div>;
-}
-
-function RastreoGPS(props) {
-  var _tracking = useState(false), tracking = _tracking[0], setTracking = _tracking[1];
-  var _puntos = useState([]), puntos = _puntos[0], setPuntos = _puntos[1];
-  var _distancia = useState(0), distancia = _distancia[0], setDistancia = _distancia[1];
-  var _elapsed = useState(0), elapsed = _elapsed[0], setElapsed = _elapsed[1];
-  var _error = useState(""), error = _error[0], setError = _error[1];
-  var watchRef = useRef(null); var ivRef = useRef(null); var startRef = useRef(null);
-  function haversine(a,b,c,d) { var R=6371000,dL=(c-a)*Math.PI/180,dO=(d-b)*Math.PI/180,x=Math.sin(dL/2)*Math.sin(dL/2)+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dO/2)*Math.sin(dO/2); return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)); }
-  function iniciar() {
-    if (!navigator.geolocation) return setError("Tu dispositivo no soporta GPS");
-    setError(""); setPuntos([]); setDistancia(0); setElapsed(0); startRef.current = Date.now();
-    ivRef.current = setInterval(function() { setElapsed(Math.floor((Date.now()-startRef.current)/1000)); }, 1000);
-    watchRef.current = navigator.geolocation.watchPosition(
-      function(pos) { var nuevo = { lat:pos.coords.latitude, lng:pos.coords.longitude }; setPuntos(function(prev) { if (prev.length>0) { var u=prev[prev.length-1]; var d=haversine(u.lat,u.lng,nuevo.lat,nuevo.lng); if (d>3) { setDistancia(function(pd) { return pd+d; }); return [...prev,nuevo]; } return prev; } return [nuevo]; }); },
-      function(err) { setError("Error GPS: "+err.message); },
-      { enableHighAccuracy:true, maximumAge:0, timeout:10000 }
-    );
-    setTracking(true);
-  }
-  function detener() { if (watchRef.current) navigator.geolocation.clearWatch(watchRef.current); clearInterval(ivRef.current); setTracking(false); }
-  useEffect(function() { return function() { if (watchRef.current) navigator.geolocation.clearWatch(watchRef.current); clearInterval(ivRef.current); }; }, []);
-  var km = distancia/1000; var ritmo = calcRitmo(secsToTime(elapsed), km||1); var timeStr = secsToTime(elapsed);
-  return <div style={{ padding:"16px 20px 40px" }}>
-    <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
-      <span style={{ fontSize:22, cursor:"pointer" }} onClick={props.onBack}>&#8592;</span>
-      <span style={{ fontWeight:700, fontSize:18 }}>Rastreo GPS</span>
-    </div>
-    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10, marginBottom:16 }}>
-      {[{l:"DISTANCIA",v:km.toFixed(2),u:"km",color:C.cyan},{l:"TIEMPO",v:timeStr,u:"",color:C.green},{l:"RITMO",v:ritmo,u:"min/km",color:C.gold}].map(function(s) {
-        return <div key={s.l} style={{ background:C.card, borderRadius:14, padding:"12px 8px", textAlign:"center", border:"0.5px solid "+C.border }}>
-          <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, fontWeight:700, marginBottom:4 }}>{s.l}</div>
-          <div style={{ fontSize:s.l==="TIEMPO"?13:20, fontWeight:900, fontFamily:"'JetBrains Mono',monospace", color:s.color }}>{s.v}</div>
-          {s.u && <div style={{ fontSize:9, color:C.muted, marginTop:2 }}>{s.u}</div>}
-        </div>;
+    function calc() { var d = target - new Date(); if (d <= 0) return setL({ d: 0, h: 0, m: 0, s: 0, past: true }); setL({ d: Math.floor(d / 864e5), h: Math.floor((d % 864e5) / 36e5), m: Math.floor((d % 36e5) / 6e4), s: Math.floor((d % 6e4) / 1e3), past: false }); }
+    calc(); var iv = setInterval(calc, 1000); return () => clearInterval(iv);
+  }, [target]);
+  if (l.past) return <div style={{ fontSize: 13, color: C.green, fontWeight: 700, textAlign: "center", padding: "12px 0" }}>✓ Evento finalizado — Resultados disponibles</div>;
+  return (
+    <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+      {[{ v: l.d, u: "DÍAS" }, { v: l.h, u: "HRS" }, { v: l.m, u: "MIN" }, { v: l.s, u: "SEG" }].map(function(x) {
+        return (
+          <div key={x.u} style={{ flex: 1, background: C.card, borderRadius: 14, padding: "14px 8px", textAlign: "center", border: "1px solid " + C.border }}>
+            <div style={{ fontSize: 28, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace", color: "#FFF", lineHeight: 1 }}>{String(x.v || 0).padStart(2, "0")}</div>
+            <div style={{ fontSize: 9, color: C.muted, letterSpacing: 2, marginTop: 6, fontWeight: 600 }}>{x.u}</div>
+          </div>
+        );
       })}
     </div>
-    <div style={{ background:C.card, borderRadius:16, padding:16, marginBottom:16, border:"0.5px solid "+C.border, minHeight:160, display:"flex", alignItems:"center", justifyContent:"center" }}>
-      {puntos.length===0 ? <div style={{ textAlign:"center" }}><div style={{ fontSize:32, marginBottom:8 }}>📍</div><div style={{ fontSize:13, color:C.muted }}>{tracking?"Esperando senal GPS...":"Presiona Iniciar para comenzar"}</div></div>
-      : <div style={{ width:"100%", textAlign:"center" }}>
-          <div style={{ fontSize:13, color:C.green, fontWeight:700, marginBottom:8 }}>📍 {puntos.length} puntos registrados</div>
-          <div style={{ fontSize:11, color:C.muted }}>Lat: {puntos[puntos.length-1].lat.toFixed(5)}</div>
-          <div style={{ fontSize:11, color:C.muted }}>Lng: {puntos[puntos.length-1].lng.toFixed(5)}</div>
-          <div style={{ marginTop:12, display:"flex", justifyContent:"center", gap:4, flexWrap:"wrap" }}>
-            {puntos.slice(-20).map(function(p,i) { return <div key={i} style={{ width:8, height:8, borderRadius:4, background:i===puntos.slice(-20).length-1?C.accent:C.cyan, opacity:0.4+(i/puntos.slice(-20).length)*0.6 }} />; })}
-          </div>
-        </div>}
-    </div>
-    {error && <div style={{ background:"rgba(255,77,106,0.1)", borderRadius:10, padding:12, marginBottom:12, fontSize:12, color:C.accent }}>{error}</div>}
-    {!tracking ? <button style={{ width:"100%", padding:18, borderRadius:14, background:C.green, color:"#FFF", fontSize:16, fontWeight:800, border:"none", cursor:"pointer" }} onClick={iniciar}>📍 Iniciar rastreo GPS</button>
-    : <button style={{ width:"100%", padding:18, borderRadius:14, background:C.accent, color:"#FFF", fontSize:16, fontWeight:800, border:"none", cursor:"pointer" }} onClick={detener}>⏹ Detener rastreo</button>}
-    {!tracking && puntos.length>0 && <div style={{ marginTop:12, background:"rgba(16,185,129,0.08)", borderRadius:12, padding:14, border:"1px solid rgba(16,185,129,0.15)", textAlign:"center" }}>
-      <div style={{ fontSize:13, fontWeight:700, color:C.green }}>Actividad completada</div>
-      <div style={{ fontSize:12, color:C.muted, marginTop:4 }}>{km.toFixed(2)} km · {timeStr} · Ritmo {ritmo} min/km</div>
-      <button style={{ marginTop:10, padding:"10px 20px", borderRadius:10, background:C.accent, color:"#FFF", fontWeight:700, border:"none", cursor:"pointer", fontSize:13 }} onClick={function() { props.onGuardarActividad({ km:km.toFixed(2), tiempo:timeStr, ritmo:ritmo, puntos:puntos.length }); }}>Guardar actividad</button>
-    </div>}
-  </div>;
+  );
 }
 
+// ── GPS + CRONÓMETRO INTEGRADO ──
+function CarreraActiva({ onTerminar, onBack }) {
+  var [phase, setPhase] = useState("ready"); // ready | running | finished
+  var [elapsed, setElapsed] = useState(0);
+  var [puntos, setPuntos] = useState([]);
+  var [distancia, setDistancia] = useState(0);
+  var [gpsError, setGpsError] = useState("");
+  var startRef = useRef(null);
+  var ivRef = useRef(null);
+  var watchRef = useRef(null);
+
+  function haversine(a, b, c, d) {
+    var R = 6371000, dL = (c - a) * Math.PI / 180, dO = (d - b) * Math.PI / 180;
+    var x = Math.sin(dL / 2) ** 2 + Math.cos(a * Math.PI / 180) * Math.cos(c * Math.PI / 180) * Math.sin(dO / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+  }
+
+  function iniciar() {
+    startRef.current = Date.now();
+    ivRef.current = setInterval(function() { setElapsed(Math.floor((Date.now() - startRef.current) / 1000)); }, 1000);
+    if (navigator.geolocation) {
+      watchRef.current = navigator.geolocation.watchPosition(
+        function(pos) {
+          var nuevo = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setPuntos(function(prev) {
+            if (prev.length > 0) {
+              var u = prev[prev.length - 1];
+              var d = haversine(u.lat, u.lng, nuevo.lat, nuevo.lng);
+              if (d > 3) { setDistancia(function(pd) { return pd + d; }); return [...prev, nuevo]; }
+              return prev;
+            }
+            return [nuevo];
+          });
+        },
+        function(err) { setGpsError("GPS: " + err.message); },
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+      );
+    } else { setGpsError("GPS no disponible — solo cronómetro activo"); }
+    setPhase("running");
+  }
+
+  function terminar() {
+    clearInterval(ivRef.current);
+    if (watchRef.current) navigator.geolocation.clearWatch(watchRef.current);
+    setPhase("finished");
+  }
+
+  useEffect(function() { return function() { clearInterval(ivRef.current); if (watchRef.current) navigator.geolocation.clearWatch(watchRef.current); }; }, []);
+
+  var km = distancia / 1000;
+  var timeStr = secsToTime(elapsed);
+  var ritmo = calcRitmo(timeStr, km || 1);
+
+  if (phase === "finished") {
+    return (
+      <div style={{ padding: "0 24px 40px" }}>
+        <div style={{ ...styles.header, padding: "52px 0 24px" }}>
+          <div style={{ ...styles.backBtn }} onClick={onBack}>←</div>
+          <div style={{ fontSize: 18, fontWeight: 700 }}>Carrera completada</div>
+        </div>
+        <div style={{ background: "linear-gradient(135deg, rgba(0,200,150,0.12), rgba(0,200,150,0.04))", borderRadius: 24, padding: 28, textAlign: "center", border: "1px solid rgba(0,200,150,0.2)", marginBottom: 20 }}>
+          <div style={{ fontSize: 13, color: C.green, fontWeight: 700, letterSpacing: 2, marginBottom: 16 }}>TIEMPO FINAL</div>
+          <div style={{ fontSize: 56, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace", color: "#FFF", letterSpacing: -2 }}>{timeStr}</div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
+          {[
+            { l: "Distancia", v: km.toFixed(2) + " km", color: C.cyan },
+            { l: "Ritmo promedio", v: ritmo, color: C.gold },
+          ].map(function(s) {
+            return (
+              <div key={s.l} style={{ ...styles.card, padding: "18px 14px", textAlign: "center" }}>
+                <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 8, letterSpacing: 0.5 }}>{s.l.toUpperCase()}</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: s.color, fontFamily: "'JetBrains Mono',monospace" }}>{s.v}</div>
+              </div>
+            );
+          })}
+        </div>
+        <button style={{ ...styles.btnPrimary, marginBottom: 12 }} onClick={function() { onTerminar(timeStr, { km: km.toFixed(2), tiempo: timeStr, ritmo: ritmo, puntos: puntos.length }); }}>
+          Guardar y ver mi certificado →
+        </button>
+        <button style={styles.btnSecondary} onClick={onBack}>Cancelar</button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: "0 24px 40px" }}>
+      <div style={{ ...styles.header, padding: "52px 0 24px" }}>
+        <div style={styles.backBtn} onClick={onBack}>←</div>
+        <div style={{ fontSize: 18, fontWeight: 700 }}>{ phase === "ready" ? "Listo para correr" : "En carrera..." }</div>
+      </div>
+
+      {/* Cronómetro principal */}
+      <div style={{ ...styles.card, padding: 28, textAlign: "center", marginBottom: 16 }}>
+        <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, letterSpacing: 2, marginBottom: 16 }}>CRONÓMETRO</div>
+        <div style={{ fontSize: 64, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace", color: phase === "running" ? C.green : C.text, letterSpacing: -3, lineHeight: 1 }}>{timeStr}</div>
+        {phase === "running" && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 14 }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.green, animation: "pulse 1s infinite" }} />
+            <span style={{ fontSize: 12, color: C.green, fontWeight: 600 }}>GRABANDO</span>
+          </div>
+        )}
+      </div>
+
+      {/* Métricas GPS */}
+      {phase === "running" && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+          <div style={{ ...styles.card, padding: "16px 14px", textAlign: "center" }}>
+            <div style={{ fontSize: 10, color: C.muted, fontWeight: 600, letterSpacing: 1, marginBottom: 8 }}>DISTANCIA</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: C.cyan, fontFamily: "'JetBrains Mono',monospace" }}>{km.toFixed(2)}</div>
+            <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>km</div>
+          </div>
+          <div style={{ ...styles.card, padding: "16px 14px", textAlign: "center" }}>
+            <div style={{ fontSize: 10, color: C.muted, fontWeight: 600, letterSpacing: 1, marginBottom: 8 }}>RITMO</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: C.gold, fontFamily: "'JetBrains Mono',monospace" }}>{ritmo}</div>
+            <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>min/km</div>
+          </div>
+        </div>
+      )}
+
+      {gpsError && (
+        <div style={{ background: C.accentDim, borderRadius: 12, padding: "10px 14px", marginBottom: 16, border: "1px solid rgba(255,61,90,0.2)", fontSize: 12, color: C.accent }}>
+          ⚠ {gpsError}
+        </div>
+      )}
+
+      {/* Ruta del evento como referencia */}
+      {phase === "running" && (
+        <div style={{ ...styles.card, padding: "16px 18px", marginBottom: 20 }}>
+          <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 12, letterSpacing: 1 }}>PUNTOS DE REFERENCIA</div>
+          {EVENTO.ruta.map(function(p, i) {
+            var passed = km >= parseFloat(p.km);
+            return (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, paddingBottom: 10, opacity: passed ? 1 : 0.4 }}>
+                <div style={{ width: 20, height: 20, borderRadius: "50%", background: passed ? C.green : C.card, border: "2px solid " + (passed ? C.green : C.border), flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9 }}>{passed ? "✓" : ""}</div>
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: passed ? C.green : C.textSub }}>{p.punto}</span>
+                  <span style={{ fontSize: 11, color: C.muted, marginLeft: 8 }}>Km {p.km}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {phase === "ready" && (
+        <div style={{ ...styles.card, padding: "18px 20px", marginBottom: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Antes de iniciar</div>
+          <div style={{ fontSize: 13, color: C.textSub, lineHeight: 1.7 }}>
+            • Presiona <strong style={{ color: C.green }}>Iniciar</strong> exactamente al cruzar la línea de salida{"\n"}
+            • El GPS y cronómetro corren juntos{"\n"}
+            • Presiona <strong style={{ color: C.accent }}>Terminar</strong> al cruzar la meta{"\n"}
+            • Tu tiempo se guardará y recibirás tu certificado
+          </div>
+        </div>
+      )}
+
+      {phase === "ready" ? (
+        <button style={{ ...styles.btnPrimary, background: "linear-gradient(135deg, #00C896, #00A07A)", fontSize: 17, padding: "20px 20px" }} onClick={iniciar}>
+          ▶ Iniciar carrera
+        </button>
+      ) : (
+        <button style={{ ...styles.btnPrimary, fontSize: 17, padding: "20px 20px" }} onClick={terminar}>
+          ⏹ Terminar y registrar tiempo
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ── APP PRINCIPAL ──
 export default function App() {
-  var _scr = useState("splash"), scr = _scr[0], setScr = _scr[1];
-  var _user = useState(null), user = _user[0], setUser = _user[1];
-  var _userData = useState(null), userData = _userData[0], setUserData = _userData[1];
-  var _tab = useState("home"), tab = _tab[0], setTab = _tab[1];
-  var _search = useState(""), search = _search[0], setSearch = _search[1];
-  var _ramaF = useState("Todas"), ramaF = _ramaF[0], setRamaF = _ramaF[1];
-  var _form = useState({ nombre:"", apellidoP:"", apellidoM:"", correo:"", telefono:"", edad:"", genero:"", talla:"", contactoEmergencia:"", pass:"", pass2:"" }), form = _form[0], setForm = _form[1];
-  var _lf = useState({ correo:"", pass:"" }), lf = _lf[0], setLf = _lf[1];
-  var _err = useState(""), err = _err[0], setErr = _err[1];
-  var _fade = useState(false), fade = _fade[0], setFade = _fade[1];
-  var _loading = useState(true), loading = _loading[0], setLoading = _loading[1];
-  var _splashDone = useState(false), splashDone = _splashDone[0], setSplashDone = _splashDone[1];
-  var _inscritos = useState([]), inscritos = _inscritos[0], setInscritos = _inscritos[1];
-  var _loadingC = useState(true), loadingC = _loadingC[0], setLoadingC = _loadingC[1];
-  var _msgGuardar = useState(""), msgGuardar = _msgGuardar[0], setMsgGuardar = _msgGuardar[1];
-  var _inscritoEnEvento = useState(false), inscritoEnEvento = _inscritoEnEvento[0], setInscritoEnEvento = _inscritoEnEvento[1];
-  var _inscripcionData = useState(null), inscripcionData = _inscripcionData[0], setInscripcionData = _inscripcionData[1];
+  var [scr, setScr] = useState("splash");
+  var [user, setUser] = useState(null);
+  var [userData, setUserData] = useState(null);
+  var [tab, setTab] = useState("home");
+  var [search, setSearch] = useState("");
+  var [ramaF, setRamaF] = useState("Todas");
+  var [form, setForm] = useState({ nombre: "", apellidoP: "", apellidoM: "", correo: "", telefono: "", edad: "", genero: "", talla: "", contactoEmergencia: "", pass: "", pass2: "" });
+  var [lf, setLf] = useState({ correo: "", pass: "" });
+  var [err, setErr] = useState("");
+  var [fade, setFade] = useState(false);
+  var [loading, setLoading] = useState(true);
+  var [splashDone, setSplashDone] = useState(false);
+  var [inscritos, setInscritos] = useState([]);
+  var [loadingC, setLoadingC] = useState(true);
+  var [msg, setMsg] = useState("");
+  var [inscritoEnEvento, setInscritoEnEvento] = useState(false);
+  var [inscripcionData, setInscripcionData] = useState(null);
 
   var evtPast = EVENTO.estado === "finalizado";
 
-  // Cargar inscritos al evento (ordenados por dorsal = orden de inscripcion)
   function cargarInscritos() {
     getDocs(collection(db, "eventos", EVENTO.id, "inscritos")).then(function(snap) {
       var lista = [];
       snap.forEach(function(d) { lista.push(Object.assign({ id: d.id }, d.data())); });
-      // Ordenar por tiempo si tienen, sino por dorsal
       lista.sort(function(a, b) {
         if (a.tiempo && b.tiempo) return timeToSecs(a.tiempo) - timeToSecs(b.tiempo);
         if (a.tiempo) return -1;
@@ -185,7 +305,6 @@ export default function App() {
         setUser(fbUser);
         getDoc(doc(db, "usuarios", fbUser.uid)).then(function(snap) {
           if (snap.exists()) setUserData(snap.data());
-          // Verificar si ya esta inscrito en el evento
           getDoc(doc(db, "eventos", EVENTO.id, "inscritos", fbUser.uid)).then(function(snapEvt) {
             if (snapEvt.exists()) { setInscritoEnEvento(true); setInscripcionData(snapEvt.data()); }
             setLoading(false);
@@ -197,8 +316,8 @@ export default function App() {
   }, []);
 
   useEffect(function() {
-    var t = setTimeout(function() { setSplashDone(true); }, 2500);
-    setTimeout(function() { setFade(true); }, 100);
+    var t = setTimeout(function() { setSplashDone(true); }, 2200);
+    setTimeout(function() { setFade(true); }, 80);
     return function() { clearTimeout(t); };
   }, []);
 
@@ -206,9 +325,9 @@ export default function App() {
     if (splashDone && !loading) {
       setFade(false);
       setTimeout(function() {
-        if (user && userData) { setScr("app"); } else { setScr("login"); }
-        setTimeout(function() { setFade(true); }, 50);
-      }, 300);
+        setScr(user && userData ? "app" : "login");
+        setTimeout(function() { setFade(true); }, 60);
+      }, 280);
     }
   }, [splashDone, loading]);
 
@@ -217,7 +336,8 @@ export default function App() {
   function go(s) { setFade(false); setTimeout(function() { setScr(s); }, 150); }
   function goTab(t) { setFade(false); setTimeout(function() { setTab(t); setScr("app"); }, 100); }
 
-  // Inscribirse al evento — asigna dorsal del 1 al 200 en orden
+  var lugaresDisp = Math.max(0, EVENTO.cupoMax - inscritos.length);
+
   function inscribirseAlEvento() {
     if (!user || !userData) return;
     setErr("");
@@ -228,65 +348,49 @@ export default function App() {
         if (actual >= EVENTO.cupoMax) throw new Error("Cupo lleno");
         var nuevoDorsal = actual + 1;
         tx.set(contadorRef, { ultimo: nuevoDorsal });
-        var inscripRef = doc(db, "eventos", EVENTO.id, "inscritos", user.uid);
-        tx.set(inscripRef, {
-          uid: user.uid,
-          nombre: userData.nombre,
-          correo: userData.correo,
-          genero: userData.genero || "",
-          dorsal: nuevoDorsal,
-          fechaInscripcion: new Date().toLocaleDateString("es-MX"),
-          tiempo: "",
+        tx.set(doc(db, "eventos", EVENTO.id, "inscritos", user.uid), {
+          uid: user.uid, nombre: userData.nombre, correo: userData.correo,
+          genero: userData.genero || "", dorsal: nuevoDorsal,
+          fechaInscripcion: new Date().toLocaleDateString("es-MX"), tiempo: "",
         });
         return nuevoDorsal;
       });
     }).then(function(dorsal) {
       var data = { uid: user.uid, nombre: userData.nombre, correo: userData.correo, genero: userData.genero || "", dorsal: dorsal, fechaInscripcion: new Date().toLocaleDateString("es-MX"), tiempo: "" };
-      setInscritoEnEvento(true);
-      setInscripcionData(data);
-      cargarInscritos();
-      go("bienvenidaEvento");
+      setInscritoEnEvento(true); setInscripcionData(data); cargarInscritos(); go("bienvenidaEvento");
     }).catch(function(e) {
-      if (e.message === "Cupo lleno") setErr("Lo sentimos, el cupo del evento esta lleno");
-      else setErr("Error al inscribirse: " + e.message);
+      setErr(e.message === "Cupo lleno" ? "El cupo del evento está lleno" : "Error: " + e.message);
     });
   }
 
-  // Guardar tiempo en el evento
-  function guardarTiempo(tiempo) {
+  function guardarTiempoYActividad(tiempo, actividad) {
     if (!user) return;
-    setMsgGuardar("Guardando...");
-    updateDoc(doc(db, "eventos", EVENTO.id, "inscritos", user.uid), { tiempo: tiempo }).then(function() {
+    setMsg("Guardando...");
+    Promise.all([
+      updateDoc(doc(db, "eventos", EVENTO.id, "inscritos", user.uid), { tiempo: tiempo }),
+      updateDoc(doc(db, "usuarios", user.uid), { ultimaActividad: actividad }),
+    ]).then(function() {
       setInscripcionData(function(prev) { return Object.assign({}, prev, { tiempo: tiempo }); });
-      cargarInscritos();
-      setMsgGuardar("");
-      go("certificado");
-    }).catch(function() { setMsgGuardar("Error al guardar"); });
-  }
-
-  function guardarActividad(datos) {
-    if (!user) return;
-    updateDoc(doc(db, "usuarios", user.uid), { ultimaActividad: datos }).then(function() {
-      setUserData(function(prev) { return Object.assign({}, prev, { ultimaActividad: datos }); });
-    }).catch(function() {});
+      setUserData(function(prev) { return Object.assign({}, prev, { ultimaActividad: actividad }); });
+      cargarInscritos(); setMsg(""); go("certificado");
+    }).catch(function() { setMsg("Error al guardar"); });
   }
 
   function doReg() {
     setErr("");
-    if (!form.nombre.trim() || !form.apellidoP.trim() || !form.correo.trim() || !form.pass || !form.genero) return setErr("Completa los campos obligatorios (*)");
-    if (form.pass.length < 6) return setErr("La contrasena debe tener al menos 6 caracteres");
-    if (form.pass !== form.pass2) return setErr("Las contrasenas no coinciden");
+    if (!form.nombre.trim() || !form.apellidoP.trim() || !form.correo.trim() || !form.pass || !form.genero) return setErr("Completa los campos obligatorios");
+    if (form.pass.length < 6) return setErr("La contraseña debe tener al menos 6 caracteres");
+    if (form.pass !== form.pass2) return setErr("Las contraseñas no coinciden");
     var nombreCompleto = form.nombre.trim() + " " + form.apellidoP.trim() + (form.apellidoM.trim() ? " " + form.apellidoM.trim() : "");
     createUserWithEmailAndPassword(auth, form.correo.trim(), form.pass)
       .then(function(cred) {
         var datos = { nombre: nombreCompleto, correo: form.correo.trim().toLowerCase(), telefono: form.telefono || "", edad: form.edad || "", genero: form.genero, talla: form.talla || "", contactoEmergencia: form.contactoEmergencia || "", fechaReg: new Date().toLocaleDateString("es-MX") };
         return setDoc(doc(db, "usuarios", cred.user.uid), datos).then(function() { setUserData(datos); go("welcome"); });
       })
-      .catch(function(error) {
-        if (error.code === "auth/email-already-in-use") setErr("Este correo ya esta registrado");
-        else if (error.code === "auth/weak-password") setErr("La contrasena debe tener al menos 6 caracteres");
-        else if (error.code === "auth/invalid-email") setErr("Correo electronico no valido");
-        else setErr("Error al registrar: " + error.message);
+      .catch(function(e) {
+        if (e.code === "auth/email-already-in-use") setErr("Este correo ya está registrado");
+        else if (e.code === "auth/invalid-email") setErr("Correo no válido");
+        else setErr("Error: " + e.message);
       });
   }
 
@@ -303,468 +407,586 @@ export default function App() {
           });
         });
       })
-      .catch(function(error) {
-        if (error.code === "auth/user-not-found" || error.code === "auth/invalid-credential") setErr("Correo o contrasena incorrectos");
-        else if (error.code === "auth/wrong-password") setErr("Contrasena incorrecta");
-        else setErr("Error: " + error.message);
+      .catch(function(e) {
+        if (e.code === "auth/user-not-found" || e.code === "auth/invalid-credential") setErr("Correo o contraseña incorrectos");
+        else setErr("Error: " + e.message);
       });
   }
 
   function doLogout() { signOut(auth).then(function() { setUser(null); setUserData(null); setInscritoEnEvento(false); setInscripcionData(null); go("login"); }); }
 
-  var lugaresDisp = Math.max(0, EVENTO.cupoMax - inscritos.length);
+  function getPosRama(uid) {
+    var g = inscripcionData ? inscripcionData.genero : "";
+    var r = inscritos.filter(function(c) { return c.genero === g && c.tiempo; });
+    var idx = r.findIndex(function(c) { return c.uid === uid; });
+    return idx >= 0 ? idx + 1 : 0;
+  }
+  function getPosGeneral(uid) {
+    var r = inscritos.filter(function(c) { return c.tiempo; });
+    var idx = r.findIndex(function(c) { return c.uid === uid; });
+    return idx >= 0 ? idx + 1 : 0;
+  }
+  function isTop10() {
+    if (!inscripcionData || !inscripcionData.tiempo || !user) return false;
+    return getPosRama(user.uid) <= 10;
+  }
+
   var filtered = search.trim() ? inscritos.filter(function(c) { return c.nombre.toLowerCase().includes(search.toLowerCase()) || String(c.dorsal).includes(search); }) : inscritos;
   var leaderboard = inscritos.filter(function(c) { return ramaF === "Todas" || c.genero === ramaF; });
-  function ini(n) { return n ? n.split(" ").map(function(x) { return x[0]; }).slice(0, 2).join("") : "?"; }
-
-  function getPosRama(uid) {
-    var genero = inscripcionData ? inscripcionData.genero : "";
-    var mismaRama = inscritos.filter(function(c) { return c.genero === genero && c.tiempo; }).sort(function(a,b) { return timeToSecs(a.tiempo)-timeToSecs(b.tiempo); });
-    var idx = mismaRama.findIndex(function(c) { return c.uid === uid; });
-    return idx >= 0 ? idx + 1 : 0;
-  }
-
-  function getPosGeneral(uid) {
-    var conTiempo = inscritos.filter(function(c) { return c.tiempo; });
-    var idx = conTiempo.findIndex(function(c) { return c.uid === uid; });
-    return idx >= 0 ? idx + 1 : 0;
-  }
-
-  function isTop10Rama() {
-    if (!inscripcionData || !inscripcionData.tiempo) return false;
-    return getPosRama(user ? user.uid : "") <= 10;
-  }
 
   function W(content) {
-    return <div style={{ maxWidth:430, margin:"0 auto", minHeight:"100vh", background:C.bg, fontFamily:"'Outfit','SF Pro Display',system-ui,sans-serif", color:"#FFF", position:"relative", overflow:"hidden" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet" />
-      <div style={{ opacity:fade?1:0, transform:fade?"translateY(0)":"translateY(12px)", transition:"all 0.35s ease" }}>{content}</div>
-    </div>;
+    return (
+      <div style={styles.page}>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet" />
+        <style>{`* { -webkit-tap-highlight-color: transparent; } input:focus { border-color: rgba(255,61,90,0.5) !important; } @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} } @keyframes spin { to{transform:rotate(360deg)} }`}</style>
+        <div style={{ opacity: fade ? 1 : 0, transform: fade ? "translateY(0)" : "translateY(10px)", transition: "opacity 0.3s ease, transform 0.3s ease" }}>{content}</div>
+      </div>
+    );
   }
 
-  // SPLASH
+  // ── SPLASH ──
   if (scr === "splash") return W(
-    <div style={{ display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center", height:"100vh" }}>
-      <div style={{ position:"absolute", top:"15%", right:"-10%", width:200, height:200, borderRadius:"50%", background:"radial-gradient(circle, rgba(255,77,106,0.15), transparent 70%)" }} />
-      <div style={{ fontSize:14, fontWeight:700, color:C.accent, letterSpacing:4, marginBottom:16 }}>COD META 26</div>
-      <div style={{ fontSize:52, fontWeight:900, letterSpacing:-3 }}>CODIGO <span style={{ color:C.accent }}>26</span></div>
-      <div style={{ width:60, height:3, background:C.accent, borderRadius:2, margin:"16px 0" }} />
-      <div style={{ fontSize:13, color:C.muted }}>Plataforma oficial de carreras</div>
-      <div style={{ fontSize:11, color:C.muted, marginTop:20 }}>Cargando...</div>
+    <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", height: "100vh", padding: 24 }}>
+      <div style={{ position: "absolute", top: "10%", left: "50%", transform: "translateX(-50%)", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,61,90,0.08), transparent 70%)", pointerEvents: "none" }} />
+      <div style={{ width: 72, height: 72, borderRadius: 22, background: "linear-gradient(135deg, #FF3D5A, #D4002D)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24, boxShadow: "0 20px 60px rgba(255,61,90,0.3)" }}>
+        <span style={{ fontSize: 32 }}>🏃</span>
+      </div>
+      <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: -1, marginBottom: 6 }}>COD META 26</div>
+      <div style={{ fontSize: 14, color: C.mutedLight, fontWeight: 500 }}>Plataforma oficial de carreras</div>
+      <div style={{ position: "absolute", bottom: 60, display: "flex", gap: 6 }}>
+        <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent }} />
+        <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.muted }} />
+        <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.muted }} />
+      </div>
     </div>
   );
 
-  // LOGIN
+  // ── LOGIN ──
   if (scr === "login") return W(
-    <div style={{ padding:"60px 24px 40px" }}>
-      <div style={{ textAlign:"center", marginBottom:36 }}>
-        <div style={{ fontSize:13, fontWeight:700, color:C.accent, letterSpacing:3, marginBottom:8 }}>COD META 26</div>
-        <div style={{ fontSize:28, fontWeight:900, lineHeight:1.1 }}>Rumbo al Mundial<br /><span style={{ color:C.accent }}>Codigo 26</span></div>
-        <p style={{ color:C.muted, marginTop:8, fontSize:12 }}>Ciclopista Rio Mayo, Cuernavaca, Morelos</p>
+    <div style={{ padding: "0 24px 40px", minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+      <div style={{ marginBottom: 40 }}>
+        <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: -0.5, lineHeight: 1.2, marginBottom: 8 }}>Bienvenido{"\n"}<span style={{ color: C.accent }}>Código 26</span></div>
+        <div style={{ fontSize: 14, color: C.mutedLight }}>Cuernavaca, Morelos</div>
       </div>
-      <label style={lbl}>Correo electronico</label>
-      <input style={inp} type="email" placeholder="tu@correo.com" value={lf.correo} onChange={function(e) { setLf({ correo:e.target.value, pass:lf.pass }); }} />
-      <label style={lbl}>Contrasena</label>
-      <input style={inp} type="password" placeholder="Tu contrasena" value={lf.pass} onChange={function(e) { setLf({ correo:lf.correo, pass:e.target.value }); }} />
-      {err && <p style={{ color:C.accent, textAlign:"center", fontSize:13 }}>{err}</p>}
-      <button style={btnP} onClick={doLogin}>Iniciar sesion</button>
-      <div style={{ textAlign:"center", marginTop:24 }}>
-        <span style={{ color:C.muted }}>No tienes cuenta? </span>
-        <span style={{ color:C.accent, fontWeight:700, cursor:"pointer" }} onClick={function() { setErr(""); go("register"); }}>Registrate aqui</span>
+      <label style={styles.label}>Correo electrónico</label>
+      <input style={styles.input} type="email" placeholder="tu@correo.com" value={lf.correo} onChange={function(e) { setLf({ correo: e.target.value, pass: lf.pass }); }} />
+      <label style={styles.label}>Contraseña</label>
+      <input style={styles.input} type="password" placeholder="••••••••" value={lf.pass} onChange={function(e) { setLf({ correo: lf.correo, pass: e.target.value }); }} />
+      {err && <div style={{ fontSize: 13, color: C.accent, marginBottom: 16, padding: "10px 14px", background: C.accentDim, borderRadius: 10, border: "1px solid rgba(255,61,90,0.2)" }}>{err}</div>}
+      <button style={{ ...styles.btnPrimary, marginBottom: 20, marginTop: 8 }} onClick={doLogin}>Iniciar sesión</button>
+      <div style={{ textAlign: "center", fontSize: 14 }}>
+        <span style={{ color: C.mutedLight }}>¿No tienes cuenta? </span>
+        <button style={styles.btnGhost} onClick={function() { setErr(""); go("register"); }}>Regístrate</button>
       </div>
     </div>
   );
 
-  // REGISTER (cuenta en la app)
+  // ── REGISTER ──
   if (scr === "register") return W(
-    <div style={{ padding:"36px 24px 40px", maxHeight:"100vh", overflowY:"auto" }}>
-      <div style={{ marginBottom:20 }}>
-        <div style={{ fontSize:24, fontWeight:900 }}>Crear cuenta</div>
-        <p style={{ color:C.muted, marginTop:6, fontSize:13 }}>Primero crea tu cuenta, luego te inscribes al evento</p>
+    <div style={{ padding: "52px 24px 40px", maxHeight: "100vh", overflowY: "auto" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 32 }}>
+        <div style={styles.backBtn} onClick={function() { setErr(""); go("login"); }}>←</div>
+        <div>
+          <div style={{ fontSize: 22, fontWeight: 800 }}>Crear cuenta</div>
+          <div style={{ fontSize: 13, color: C.mutedLight, marginTop: 2 }}>El dorsal se asigna al inscribirte al evento</div>
+        </div>
       </div>
-      <div style={{ background:"rgba(0,212,255,0.06)", borderRadius:12, padding:"12px 16px", marginBottom:20, border:"1px solid rgba(0,212,255,0.15)" }}>
-        <div style={{ fontSize:12, fontWeight:700, color:C.cyan }}>Cuenta vs Inscripcion al evento</div>
-        <div style={{ fontSize:11, color:C.muted, marginTop:4, lineHeight:1.6 }}>Tu cuenta te permite entrar a la app en cualquier carrera. El dorsal se asigna cuando te inscribes a un evento especifico.</div>
+      <div style={{ ...styles.card, padding: "14px 18px", marginBottom: 24, borderColor: "rgba(0,194,224,0.15)", background: C.cyanDim }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.cyan, marginBottom: 4 }}>Cuenta vs inscripción al evento</div>
+        <div style={{ fontSize: 12, color: C.textSub, lineHeight: 1.6 }}>Tu cuenta te permite acceder a cualquier carrera futura. El dorsal (del 1 al 200) se asigna cuando te inscribes a este evento específico.</div>
       </div>
-      <div style={{ fontSize:11, fontWeight:700, color:C.accent, letterSpacing:2, marginBottom:12 }}>DATOS PERSONALES</div>
-      <label style={lbl}>Nombre(s) *</label>
-      <input style={inp} placeholder="Ej: Juan Carlos" value={form.nombre} onChange={function(e) { setForm(Object.assign({}, form, { nombre:e.target.value })); }} />
-      <label style={lbl}>Apellido paterno *</label>
-      <input style={inp} placeholder="Ej: Perez" value={form.apellidoP} onChange={function(e) { setForm(Object.assign({}, form, { apellidoP:e.target.value })); }} />
-      <label style={lbl}>Apellido materno</label>
-      <input style={inp} placeholder="Opcional" value={form.apellidoM} onChange={function(e) { setForm(Object.assign({}, form, { apellidoM:e.target.value })); }} />
-      <div style={{ display:"flex", gap:10 }}>
-        <div style={{ flex:1 }}><label style={lbl}>Edad</label><input style={inp} type="number" placeholder="25" value={form.edad} onChange={function(e) { setForm(Object.assign({}, form, { edad:e.target.value })); }} /></div>
-        <div style={{ flex:1 }}><label style={lbl}>Genero *</label><select style={Object.assign({}, inp, { cursor:"pointer" })} value={form.genero} onChange={function(e) { setForm(Object.assign({}, form, { genero:e.target.value })); }}><option value="">Seleccionar</option><option value="Varonil">Varonil</option><option value="Femenil">Femenil</option></select></div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: C.mutedLight, letterSpacing: 1.5, marginBottom: 14 }}>DATOS PERSONALES</div>
+      <label style={styles.label}>Nombre(s) *</label>
+      <input style={styles.input} placeholder="Juan Carlos" value={form.nombre} onChange={function(e) { setForm(Object.assign({}, form, { nombre: e.target.value })); }} />
+      <label style={styles.label}>Apellido paterno *</label>
+      <input style={styles.input} placeholder="García" value={form.apellidoP} onChange={function(e) { setForm(Object.assign({}, form, { apellidoP: e.target.value })); }} />
+      <label style={styles.label}>Apellido materno</label>
+      <input style={styles.input} placeholder="Opcional" value={form.apellidoM} onChange={function(e) { setForm(Object.assign({}, form, { apellidoM: e.target.value })); }} />
+      <div style={{ display: "flex", gap: 12 }}>
+        <div style={{ flex: 1 }}><label style={styles.label}>Edad</label><input style={styles.input} type="number" placeholder="25" value={form.edad} onChange={function(e) { setForm(Object.assign({}, form, { edad: e.target.value })); }} /></div>
+        <div style={{ flex: 1 }}><label style={styles.label}>Género *</label><select style={{ ...styles.input, cursor: "pointer" }} value={form.genero} onChange={function(e) { setForm(Object.assign({}, form, { genero: e.target.value })); }}><option value="">Seleccionar</option><option value="Varonil">Varonil</option><option value="Femenil">Femenil</option></select></div>
       </div>
-      <label style={lbl}>Telefono</label>
-      <input style={inp} type="tel" placeholder="777 123 4567" value={form.telefono} onChange={function(e) { setForm(Object.assign({}, form, { telefono:e.target.value })); }} />
-      <label style={lbl}>Talla de playera</label>
-      <select style={Object.assign({}, inp, { cursor:"pointer" })} value={form.talla} onChange={function(e) { setForm(Object.assign({}, form, { talla:e.target.value })); }}><option value="">Seleccionar</option><option value="XS">XS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option></select>
-      <label style={lbl}>Contacto de emergencia</label>
-      <input style={inp} placeholder="Nombre y telefono" value={form.contactoEmergencia} onChange={function(e) { setForm(Object.assign({}, form, { contactoEmergencia:e.target.value })); }} />
-      <div style={{ fontSize:11, fontWeight:700, color:C.cyan, letterSpacing:2, marginBottom:12, marginTop:8 }}>DATOS DE CUENTA</div>
-      <label style={lbl}>Correo electronico *</label>
-      <input style={inp} type="email" placeholder="tu@correo.com" value={form.correo} onChange={function(e) { setForm(Object.assign({}, form, { correo:e.target.value })); }} />
-      <label style={lbl}>Contrasena * (minimo 6 caracteres)</label>
-      <input style={inp} type="password" placeholder="Minimo 6 caracteres" value={form.pass} onChange={function(e) { setForm(Object.assign({}, form, { pass:e.target.value })); }} />
-      <label style={lbl}>Confirmar contrasena *</label>
-      <input style={inp} type="password" placeholder="Repite tu contrasena" value={form.pass2} onChange={function(e) { setForm(Object.assign({}, form, { pass2:e.target.value })); }} />
-      {err && <p style={{ color:C.accent, textAlign:"center", fontSize:13, marginBottom:8 }}>{err}</p>}
-      <button style={btnP} onClick={doReg}>Crear mi cuenta</button>
-      <div style={{ textAlign:"center", marginTop:20, paddingBottom:20 }}><span style={{ color:C.muted }}>Ya tienes cuenta? </span><span style={{ color:C.accent, fontWeight:700, cursor:"pointer" }} onClick={function() { setErr(""); go("login"); }}>Inicia sesion</span></div>
+      <label style={styles.label}>Teléfono</label>
+      <input style={styles.input} type="tel" placeholder="777 123 4567" value={form.telefono} onChange={function(e) { setForm(Object.assign({}, form, { telefono: e.target.value })); }} />
+      <label style={styles.label}>Talla de playera</label>
+      <select style={{ ...styles.input, cursor: "pointer" }} value={form.talla} onChange={function(e) { setForm(Object.assign({}, form, { talla: e.target.value })); }}><option value="">Seleccionar</option><option value="XS">XS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option></select>
+      <label style={styles.label}>Contacto de emergencia</label>
+      <input style={styles.input} placeholder="Nombre y teléfono" value={form.contactoEmergencia} onChange={function(e) { setForm(Object.assign({}, form, { contactoEmergencia: e.target.value })); }} />
+      <div style={{ fontSize: 11, fontWeight: 700, color: C.mutedLight, letterSpacing: 1.5, marginBottom: 14, marginTop: 8 }}>ACCESO A LA APP</div>
+      <label style={styles.label}>Correo electrónico *</label>
+      <input style={styles.input} type="email" placeholder="tu@correo.com" value={form.correo} onChange={function(e) { setForm(Object.assign({}, form, { correo: e.target.value })); }} />
+      <label style={styles.label}>Contraseña * (mínimo 6 caracteres)</label>
+      <input style={styles.input} type="password" placeholder="••••••••" value={form.pass} onChange={function(e) { setForm(Object.assign({}, form, { pass: e.target.value })); }} />
+      <label style={styles.label}>Confirmar contraseña *</label>
+      <input style={styles.input} type="password" placeholder="••••••••" value={form.pass2} onChange={function(e) { setForm(Object.assign({}, form, { pass2: e.target.value })); }} />
+      {err && <div style={{ fontSize: 13, color: C.accent, marginBottom: 16, padding: "10px 14px", background: C.accentDim, borderRadius: 10 }}>{err}</div>}
+      <button style={{ ...styles.btnPrimary, marginBottom: 20 }} onClick={doReg}>Crear mi cuenta</button>
+      <div style={{ textAlign: "center", fontSize: 14, paddingBottom: 20 }}>
+        <span style={{ color: C.mutedLight }}>¿Ya tienes cuenta? </span>
+        <button style={styles.btnGhost} onClick={function() { setErr(""); go("login"); }}>Inicia sesión</button>
+      </div>
     </div>
   );
 
-  // WELCOME (despues de crear cuenta)
+  // ── WELCOME ──
   if (scr === "welcome" && userData) return W(
-    <div style={{ display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center", minHeight:"100vh", padding:24, textAlign:"center" }}>
-      <div style={{ fontSize:64, marginBottom:16 }}>✅</div>
-      <div style={{ fontSize:28, fontWeight:900, marginBottom:6 }}>Cuenta creada!</div>
-      <p style={{ color:C.muted, marginBottom:28 }}>Bienvenido, {userData.nombre.split(" ")[0]}</p>
-      <div style={{ background:"rgba(0,212,255,0.06)", borderRadius:18, padding:20, width:"100%", border:"1px solid rgba(0,212,255,0.15)", marginBottom:20 }}>
-        <div style={{ fontSize:13, fontWeight:700, color:C.cyan, marginBottom:8 }}>Siguiente paso</div>
-        <div style={{ fontSize:13, color:C.muted, lineHeight:1.6 }}>Ahora puedes inscribirte al evento Codigo 26 para obtener tu dorsal oficial del 1 al 200 segun el orden de inscripcion.</div>
+    <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", minHeight: "100vh", padding: 24, textAlign: "center" }}>
+      <div style={{ width: 80, height: 80, borderRadius: 28, background: "linear-gradient(135deg, #00C896, #00A07A)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, marginBottom: 24 }}>✓</div>
+      <div style={{ fontSize: 26, fontWeight: 800, marginBottom: 8 }}>Cuenta creada</div>
+      <div style={{ fontSize: 15, color: C.textSub, marginBottom: 32 }}>Hola, {userData.nombre.split(" ")[0]}</div>
+      <div style={{ ...styles.card, padding: 20, width: "100%", marginBottom: 24, textAlign: "left" }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: C.cyan, marginBottom: 8 }}>Siguiente paso</div>
+        <div style={{ fontSize: 14, color: C.textSub, lineHeight: 1.7 }}>Inscríbete al evento Código 26 para obtener tu dorsal oficial (del 1 al 200 por orden de registro).</div>
       </div>
-      <button style={Object.assign({}, btnP, { width:"100%", marginBottom:10 })} onClick={function() { setTab("home"); go("app"); }}>Entrar a la app e inscribirme</button>
+      <button style={{ ...styles.btnPrimary, width: "100%" }} onClick={function() { setTab("home"); go("app"); }}>Entrar e inscribirme →</button>
     </div>
   );
 
-  // BIENVENIDA AL EVENTO (despues de inscribirse)
+  // ── BIENVENIDA AL EVENTO ──
   if (scr === "bienvenidaEvento" && inscripcionData) return W(
-    <div style={{ display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center", minHeight:"100vh", padding:24, textAlign:"center" }}>
-      <div style={{ fontSize:64, marginBottom:16 }}>🎉</div>
-      <div style={{ fontSize:28, fontWeight:900, marginBottom:6 }}>Inscripcion exitosa!</div>
-      <p style={{ color:C.muted, marginBottom:28 }}>Ya estas inscrito en Codigo 26</p>
-      <div style={{ background:"linear-gradient(135deg, rgba(255,77,106,0.1), rgba(255,77,106,0.03))", borderRadius:22, padding:"28px 24px", width:"100%", border:"1.5px solid rgba(255,77,106,0.2)", marginBottom:16 }}>
-        <div style={{ fontSize:11, fontWeight:700, color:C.accent, letterSpacing:3, marginBottom:10 }}>TU DORSAL OFICIAL</div>
-        <div style={{ fontSize:80, fontWeight:900, fontFamily:"'JetBrains Mono',monospace", letterSpacing:-3, color:"#FFF" }}>{inscripcionData.dorsal}</div>
-        <p style={{ color:C.muted, fontSize:13, marginTop:10, lineHeight:1.5 }}>Dorsal #{inscripcionData.dorsal} de 200<br />Inscripcion #{inscripcionData.dorsal} en orden de llegada</p>
+    <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", minHeight: "100vh", padding: 24, textAlign: "center" }}>
+      <div style={{ position: "absolute", top: "8%", left: "50%", transform: "translateX(-50%)", width: 280, height: 280, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,61,90,0.07), transparent 70%)" }} />
+      <div style={{ fontSize: 13, fontWeight: 700, color: C.accent, letterSpacing: 2, marginBottom: 20 }}>CÓDIGO 26 · 5K</div>
+      <div style={{ fontSize: 100, fontWeight: 900, fontFamily: "'JetBrains Mono',monospace", lineHeight: 1, letterSpacing: -4, color: "#FFF", marginBottom: 8 }}>{inscripcionData.dorsal}</div>
+      <div style={{ fontSize: 14, color: C.mutedLight, marginBottom: 32 }}>Tu dorsal oficial · Inscripción #{inscripcionData.dorsal} de {EVENTO.cupoMax}</div>
+      <div style={{ ...styles.card, padding: 20, width: "100%", marginBottom: 24 }}>
+        <div style={{ fontSize: 11, color: C.muted, letterSpacing: 1, marginBottom: 8 }}>INSCRITO COMO</div>
+        <div style={{ fontSize: 17, fontWeight: 700 }}>{inscripcionData.nombre}</div>
+        <div style={{ fontSize: 13, color: C.textSub, marginTop: 4 }}>{inscripcionData.genero} · {inscripcionData.fechaInscripcion}</div>
       </div>
-      <div style={{ background:C.card, borderRadius:14, padding:16, width:"100%", border:"0.5px solid "+C.border, marginBottom:16 }}>
-        <div style={{ fontSize:10, color:C.muted, letterSpacing:2 }}>INSCRITO COMO</div>
-        <div style={{ fontSize:17, fontWeight:700, marginTop:4 }}>{inscripcionData.nombre}</div>
-        <div style={{ fontSize:12, color:C.muted, marginTop:2 }}>Categoria: {inscripcionData.genero} · {inscripcionData.fechaInscripcion}</div>
-      </div>
-      <button style={Object.assign({}, btnP, { width:"100%" })} onClick={function() { setTab("home"); go("app"); }}>Entrar al evento</button>
+      <button style={{ ...styles.btnPrimary, width: "100%" }} onClick={function() { setTab("home"); go("app"); }}>Entrar al evento →</button>
     </div>
   );
 
-  // CERTIFICADO
+  // ── CERTIFICADO ──
   if (scr === "certificado" && inscripcionData) {
     var posGen = getPosGeneral(user ? user.uid : "");
     var posRamaC = getPosRama(user ? user.uid : "");
     var ritmoC = calcRitmo(inscripcionData.tiempo, 5);
     return W(
-      <div style={{ padding:"16px 20px 40px" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
-          <span style={{ fontSize:22, cursor:"pointer" }} onClick={function() { go("app"); }}>&#8592;</span>
-          <span style={{ fontWeight:700, fontSize:18 }}>Certificado de finisher</span>
+      <div style={{ padding: "0 24px 40px" }}>
+        <div style={{ ...styles.header, padding: "52px 0 24px" }}>
+          <div style={styles.backBtn} onClick={function() { go("app"); }}>←</div>
+          <div style={{ fontSize: 18, fontWeight: 700 }}>Certificado de finisher</div>
         </div>
-        <div style={{ background:"#FFFFF8", borderRadius:20, padding:28, textAlign:"center", position:"relative", overflow:"hidden", marginBottom:20, border:"2px solid #D4A020" }}>
-          <div style={{ position:"absolute", top:10, left:10, width:28, height:28, borderTop:"2px solid #D4A020", borderLeft:"2px solid #D4A020", borderTopLeftRadius:4 }} />
-          <div style={{ position:"absolute", top:10, right:10, width:28, height:28, borderTop:"2px solid #D4A020", borderRight:"2px solid #D4A020", borderTopRightRadius:4 }} />
-          <div style={{ position:"absolute", bottom:10, left:10, width:28, height:28, borderBottom:"2px solid #D4A020", borderLeft:"2px solid #D4A020", borderBottomLeftRadius:4 }} />
-          <div style={{ position:"absolute", bottom:10, right:10, width:28, height:28, borderBottom:"2px solid #D4A020", borderRight:"2px solid #D4A020", borderBottomRightRadius:4 }} />
-          <div style={{ fontSize:28, marginBottom:6 }}>🏅</div>
-          <div style={{ fontSize:11, fontWeight:800, color:"#D4A020", letterSpacing:4, marginBottom:6 }}>CERTIFICADO OFICIAL</div>
-          <div style={{ width:60, height:1.5, background:"#D4A020", margin:"10px auto" }} />
-          <div style={{ fontSize:9, color:"#8A8078", letterSpacing:3, marginBottom:6 }}>CERTIFICA QUE</div>
-          <div style={{ fontSize:22, fontWeight:900, color:"#1A1208", marginBottom:4 }}>{inscripcionData.nombre}</div>
-          <div style={{ fontSize:13, fontWeight:700, color:"#5A4A30" }}>Dorsal #{inscripcionData.dorsal} · {inscripcionData.genero}</div>
-          <div style={{ width:50, height:1, background:"#E0D8C8", margin:"12px auto" }} />
-          <div style={{ fontSize:13, fontWeight:700, color:"#3A2E1E", marginBottom:4 }}>Completo exitosamente</div>
-          <div style={{ fontSize:16, fontWeight:900, color:"#1A1208" }}>Rumbo al Mundial · Codigo 26</div>
-          <div style={{ fontSize:12, color:"#8A8078", marginTop:4 }}>5K · Ciclopista Rio Mayo, Cuernavaca</div>
-          <div style={{ display:"flex", justifyContent:"center", gap:20, margin:"16px 0 8px" }}>
-            {[{l:"TIEMPO",v:inscripcionData.tiempo||"--:--:--"},{l:"POSICION",v:posGen>0?"#"+posGen:"-"},{l:"RITMO",v:ritmoC+" /km"}].map(function(s) {
-              return <div key={s.l}>
-                <div style={{ fontSize:8, fontWeight:700, color:"#8A8078", letterSpacing:2, marginBottom:3 }}>{s.l}</div>
-                <div style={{ fontSize:15, fontWeight:900, color:"#1A1208", fontFamily:"'JetBrains Mono',monospace" }}>{s.v}</div>
-              </div>;
+        {/* Certificado visual */}
+        <div style={{ background: "#FAFAF2", borderRadius: 24, padding: 32, textAlign: "center", marginBottom: 20, border: "2px solid #E8C840", position: "relative", overflow: "hidden" }}>
+          {/* Esquinas decorativas */}
+          {[["top","left"],["top","right"],["bottom","left"],["bottom","right"]].map(function(pos) {
+            return <div key={pos.join()} style={{ position:"absolute", [pos[0]]:16, [pos[1]]:16, width:24, height:24, borderTop:pos[0]==="top"?"2px solid #D4A020":"none", borderBottom:pos[0]==="bottom"?"2px solid #D4A020":"none", borderLeft:pos[1]==="left"?"2px solid #D4A020":"none", borderRight:pos[1]==="right"?"2px solid #D4A020":"none", borderRadius:2 }} />;
+          })}
+          <div style={{ fontSize: 24, marginBottom: 8 }}>🏅</div>
+          <div style={{ fontSize: 10, fontWeight: 800, color: "#B8860B", letterSpacing: 4, marginBottom: 4 }}>CERTIFICADO OFICIAL</div>
+          <div style={{ width: 50, height: 1, background: "#D4A020", margin: "12px auto" }} />
+          <div style={{ fontSize: 9, color: "#9A9080", letterSpacing: 3, marginBottom: 8 }}>CERTIFICA QUE</div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: "#1A1208", marginBottom: 4, lineHeight: 1.2 }}>{inscripcionData.nombre}</div>
+          <div style={{ fontSize: 12, color: "#6A5A40", marginBottom: 16 }}>Dorsal #{inscripcionData.dorsal} · {inscripcionData.genero}</div>
+          <div style={{ fontSize: 12, color: "#6A5A40", marginBottom: 4 }}>completó exitosamente</div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: "#1A1208", marginBottom: 4 }}>Rumbo al Mundial · Código 26</div>
+          <div style={{ fontSize: 12, color: "#9A9080", marginBottom: 20 }}>5K · Cuernavaca, Morelos</div>
+          <div style={{ display: "flex", justifyContent: "center", gap: 28, marginBottom: 16 }}>
+            {[{ l: "TIEMPO", v: inscripcionData.tiempo || "--:--:--" }, { l: "POSICIÓN", v: posGen > 0 ? "#" + posGen : "-" }, { l: "RITMO", v: ritmoC }].map(function(s) {
+              return <div key={s.l}><div style={{ fontSize: 8, color: "#9A9080", letterSpacing: 2, marginBottom: 4, fontWeight: 700 }}>{s.l}</div><div style={{ fontSize: 16, fontWeight: 900, color: "#1A1208", fontFamily: "'JetBrains Mono',monospace" }}>{s.v}</div></div>;
             })}
           </div>
-          <div style={{ width:60, height:1, background:"#D4A020", margin:"10px auto" }} />
-          <div style={{ fontSize:10, color:"#8A8078" }}>Cuernavaca, Morelos · 3 de mayo de 2026</div>
-          <div style={{ fontSize:9, color:"#B0A898", marginTop:8 }}>Folio: COD26-5K-{String(inscripcionData.dorsal||"0").padStart(3,"0")}</div>
-          {isTop10Rama() && <div style={{ marginTop:10, background:"rgba(245,166,35,0.15)", borderRadius:8, padding:"6px 12px", display:"inline-block" }}><span style={{ fontSize:11, fontWeight:700, color:"#D4A020" }}>🏆 Top 10 {inscripcionData.genero}</span></div>}
+          <div style={{ width: 50, height: 1, background: "#D4A020", margin: "0 auto 12px" }} />
+          <div style={{ fontSize: 10, color: "#9A9080" }}>Cuernavaca, Morelos · 3 de mayo de 2026</div>
+          <div style={{ fontSize: 9, color: "#C0B898", marginTop: 6 }}>Folio: COD26-5K-{String(inscripcionData.dorsal || "0").padStart(3, "0")}</div>
+          {isTop10() && (
+            <div style={{ marginTop: 14, background: "rgba(240,165,0,0.15)", borderRadius: 10, padding: "8px 16px", display: "inline-block", border: "1px solid rgba(240,165,0,0.3)" }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#B8860B" }}>🏆 Top 10 {inscripcionData.genero} · Recompensa desbloqueada</span>
+            </div>
+          )}
         </div>
-        {isTop10Rama() && <button style={Object.assign({}, btnP, { marginBottom:10 })} onClick={function() { go("rewards"); }}>🎁 Ver mis recompensas Top 10</button>}
-        <button style={btnS} onClick={function() { go("app"); }}>Volver al inicio</button>
+        {isTop10() && <button style={{ ...styles.btnPrimary, marginBottom: 12 }} onClick={function() { go("rewards"); }}>Ver mi recompensa Top 10 →</button>}
+        <button style={styles.btnSecondary} onClick={function() { go("app"); }}>Volver al inicio</button>
       </div>
     );
   }
 
-  // CRONOMETRO
-  if (scr === "cronometro") return W(
-    <div style={{ padding:"16px 20px 40px" }}>
-      <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
-        <span style={{ fontSize:22, cursor:"pointer" }} onClick={function() { go("app"); }}>&#8592;</span>
-        <span style={{ fontWeight:700, fontSize:18 }}>Registrar mi tiempo</span>
-      </div>
-      <div style={{ background:"rgba(0,212,255,0.05)", borderRadius:14, padding:14, marginBottom:16, border:"1px solid rgba(0,212,255,0.1)" }}>
-        <div style={{ fontSize:12, color:C.cyan, fontWeight:600 }}>Instrucciones</div>
-        <div style={{ fontSize:12, color:C.muted, marginTop:4, lineHeight:1.7 }}>1. Presiona Iniciar al cruzar la linea de salida{"\n"}2. Presiona Pausar al cruzar la meta{"\n"}3. Presiona Registrar para guardar tu tiempo oficial</div>
-      </div>
-      {msgGuardar ? <div style={{ textAlign:"center", padding:20, fontSize:14, color:C.green, fontWeight:700 }}>{msgGuardar}</div>
-      : <Cronometro onGuardar={guardarTiempo} />}
-      {inscripcionData && inscripcionData.tiempo && (
-        <div style={{ background:"rgba(16,185,129,0.08)", borderRadius:12, padding:14, border:"1px solid rgba(16,185,129,0.15)", textAlign:"center", marginTop:8 }}>
-          <div style={{ fontSize:12, color:C.muted }}>Tu tiempo registrado</div>
-          <div style={{ fontSize:28, fontWeight:900, fontFamily:"'JetBrains Mono',monospace", color:C.green, marginTop:4 }}>{inscripcionData.tiempo}</div>
-          <button style={{ marginTop:10, padding:"8px 20px", borderRadius:10, background:"rgba(255,255,255,0.06)", color:"#FFF", fontWeight:600, border:"1px solid rgba(255,255,255,0.1)", cursor:"pointer", fontSize:13 }} onClick={function() { go("certificado"); }}>Ver mi certificado</button>
-        </div>
-      )}
-    </div>
+  // ── CARRERA ACTIVA (GPS + CRONÓMETRO) ──
+  if (scr === "carrera") return W(
+    <CarreraActiva
+      onTerminar={function(tiempo, actividad) {
+        if (msg === "Guardando...") return;
+        guardarTiempoYActividad(tiempo, actividad);
+      }}
+      onBack={function() { go("app"); }}
+    />
   );
 
-  // GPS
-  if (scr === "gps") return W(<RastreoGPS onBack={function() { go("app"); }} onGuardarActividad={function(datos) { guardarActividad(datos); go("app"); }} />);
-
-  // REWARDS
+  // ── REWARDS ──
   if (scr === "rewards") return W(
-    <div style={{ padding:"16px 20px 40px" }}>
-      <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
-        <span style={{ fontSize:22, cursor:"pointer" }} onClick={function() { go("app"); }}>&#8592;</span>
-        <span style={{ fontWeight:700 }}>Zona de Recompensas</span>
+    <div style={{ padding: "0 24px 40px" }}>
+      <div style={{ ...styles.header, padding: "52px 0 24px" }}>
+        <div style={styles.backBtn} onClick={function() { go("app"); }}>←</div>
+        <div style={{ fontSize: 18, fontWeight: 700 }}>Recompensas</div>
       </div>
-      <div style={{ background:"linear-gradient(135deg, rgba(245,166,35,0.1), rgba(245,166,35,0.03))", borderRadius:20, padding:22, textAlign:"center", marginBottom:20, border:"1px solid rgba(245,166,35,0.2)" }}>
-        <div style={{ fontSize:40, marginBottom:8 }}>🏆</div>
-        <div style={{ fontSize:18, fontWeight:900 }}>Recompensas Top 10</div>
-        <div style={{ fontSize:13, color:C.muted, marginTop:8 }}>Primeros 10 varonil y primeros 10 femenil</div>
+      <div style={{ background: "linear-gradient(135deg, rgba(240,165,0,0.12), rgba(240,165,0,0.04))", borderRadius: 24, padding: 28, textAlign: "center", marginBottom: 24, border: "1px solid rgba(240,165,0,0.2)" }}>
+        <div style={{ fontSize: 40, marginBottom: 12 }}>🏆</div>
+        <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>Top 10 por Rama</div>
+        <div style={{ fontSize: 14, color: C.textSub, lineHeight: 1.6 }}>Los primeros 10 en llegar a la meta en categoría <strong style={{ color: C.text }}>Varonil</strong> y los primeros 10 en <strong style={{ color: C.text }}>Femenil</strong> obtienen:</div>
       </div>
-      {isTop10Rama() ? (
-        <div style={{ background:"rgba(16,185,129,0.08)", borderRadius:14, padding:16, marginBottom:20, border:"1px solid rgba(16,185,129,0.2)", textAlign:"center" }}>
-          <div style={{ fontSize:14, fontWeight:700, color:C.green }}>🎉 Top 10 {inscripcionData ? inscripcionData.genero : ""} · Pos #{getPosRama(user ? user.uid : "")}</div>
-          <div style={{ fontSize:12, color:C.muted, marginTop:4 }}>Tienes acceso a los cupones</div>
+
+      {/* Recompensa principal */}
+      <div style={{ background: "linear-gradient(135deg, #1A1400, #201800)", borderRadius: 20, padding: 24, marginBottom: 16, border: "1px solid rgba(240,165,0,0.3)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div style={{ width: 60, height: 60, borderRadius: 18, background: "rgba(240,165,0,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>🎟️</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 4 }}>50% de descuento</div>
+            <div style={{ fontSize: 13, color: C.textSub, lineHeight: 1.5 }}>En la preventa de la próxima carrera COD META 26. Exclusivo para los primeros 10 de cada categoría.</div>
+            <div style={{ marginTop: 10, display: "inline-block", background: "rgba(240,165,0,0.15)", padding: "5px 14px", borderRadius: 20, fontSize: 11, fontWeight: 700, color: C.gold, border: "1px solid rgba(240,165,0,0.25)" }}>Próximamente</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Estado del usuario */}
+      {isTop10() ? (
+        <div style={{ ...styles.card, padding: 20, border: "1px solid rgba(0,200,150,0.2)", background: C.greenDim, textAlign: "center" }}>
+          <div style={{ fontSize: 24, marginBottom: 8 }}>🎉</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: C.green, marginBottom: 4 }}>¡Felicidades! Estás en el Top 10 {inscripcionData ? inscripcionData.genero : ""}</div>
+          <div style={{ fontSize: 13, color: C.textSub }}>Posición #{getPosRama(user ? user.uid : "")} en tu categoría. Recibirás tu descuento cuando anunciemos la próxima carrera.</div>
         </div>
       ) : (
-        <div style={{ background:"rgba(107,113,148,0.08)", borderRadius:14, padding:16, marginBottom:20, border:"1px solid rgba(107,113,148,0.2)", textAlign:"center" }}>
-          <div style={{ fontSize:13, color:C.muted }}>Los cupones se desbloquean para los primeros 10 de cada rama al finalizar el evento</div>
+        <div style={{ ...styles.card, padding: 20, textAlign: "center" }}>
+          <div style={{ fontSize: 13, color: C.mutedLight, lineHeight: 1.6 }}>
+            {inscripcionData && inscripcionData.tiempo
+              ? "Tu posición actual es #" + getPosRama(user ? user.uid : "") + " en " + (inscripcionData.genero || "tu categoría") + ". El descuento es para los primeros 10."
+              : "Inscríbete al evento, registra tu tiempo y termina entre los primeros 10 de tu categoría para ganar el descuento."}
+          </div>
         </div>
       )}
-      {CUPONES.map(function(cup) {
-        return <div key={cup.id} style={{ background:C.card, borderRadius:16, padding:18, marginBottom:12, border:"0.5px solid "+C.border }}>
-          <div style={{ display:"flex", alignItems:"center", gap:14 }}>
-            <div style={{ width:50, height:50, borderRadius:14, background:cup.color+"18", display:"flex", alignItems:"center", justifyContent:"center", fontSize:24, flexShrink:0 }}>{cup.icono}</div>
-            <div style={{ flex:1 }}>
-              <div style={{ fontSize:14, fontWeight:700 }}>{cup.titulo}</div>
-              <div style={{ fontSize:12, color:C.muted, marginTop:2 }}>{cup.desc}</div>
-              <div style={{ marginTop:8 }}><span style={{ background:"rgba(245,166,35,0.1)", color:C.gold, fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:20 }}>Proximamente</span></div>
-            </div>
-          </div>
-        </div>;
-      })}
     </div>
   );
 
-  // MAP
+  // ── MAP ──
   if (scr === "map") return W(
-    <div style={{ padding:"16px 20px 40px" }}>
-      <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
-        <span style={{ fontSize:22, cursor:"pointer" }} onClick={function() { go("app"); }}>&#8592;</span>
-        <span style={{ fontWeight:700 }}>Mapa de la ruta</span>
+    <div style={{ padding: "0 24px 40px" }}>
+      <div style={{ ...styles.header, padding: "52px 0 24px" }}>
+        <div style={styles.backBtn} onClick={function() { go("app"); }}>←</div>
+        <div><div style={{ fontSize: 18, fontWeight: 700 }}>Ruta del evento</div><div style={{ fontSize: 12, color: C.mutedLight, marginTop: 2 }}>5K · Cuernavaca, Morelos</div></div>
       </div>
-      <div style={{ background:C.card, borderRadius:18, padding:20, border:"0.5px solid "+C.border, marginBottom:16 }}>
-        <div style={{ fontSize:16, fontWeight:800, marginBottom:4 }}>Rumbo al Mundial Codigo 26</div>
-        <div style={{ fontSize:13, color:C.muted }}>5K · Ciclopista Rio Mayo, Cuernavaca</div>
-      </div>
-      <div style={{ position:"relative", paddingLeft:28 }}>
+      <div style={{ position: "relative", paddingLeft: 16 }}>
         {EVENTO.ruta.map(function(p, i) {
-          var isF=i===0, isL=i===EVENTO.ruta.length-1, color=isF?C.green:isL?C.accent:C.cyan;
-          return <div key={i} style={{ position:"relative", paddingBottom:i<EVENTO.ruta.length-1?20:0, paddingLeft:24 }}>
-            {i<EVENTO.ruta.length-1 && <div style={{ position:"absolute", left:8, top:20, width:2, height:"calc(100% - 8px)", background:"rgba(0,212,255,0.2)" }} />}
-            <div style={{ position:"absolute", left:0, top:2, width:18, height:18, borderRadius:9, background:color, display:"flex", alignItems:"center", justifyContent:"center", border:"2px solid "+C.bg, fontSize:8 }}>{isF?"▶":isL?"🏁":""}</div>
-            <div style={{ background:C.card, borderRadius:12, padding:"10px 14px", border:"0.5px solid "+C.border }}>
-              <div style={{ display:"flex", justifyContent:"space-between" }}><span style={{ fontSize:11, fontWeight:700, color:color }}>{p.punto}</span><span style={{ fontSize:10, color:C.muted, fontFamily:"'JetBrains Mono',monospace" }}>Km {p.km}</span></div>
-              <div style={{ fontSize:12, color:C.muted, marginTop:3 }}>{p.lugar}</div>
+          var isF = i === 0, isL = i === EVENTO.ruta.length - 1;
+          var color = isF ? C.green : isL ? C.accent : C.cyan;
+          return (
+            <div key={i} style={{ display: "flex", gap: 16, paddingBottom: i < EVENTO.ruta.length - 1 ? 4 : 0 }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
+                <div style={{ width: 20, height: 20, borderRadius: "50%", background: color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, flexShrink: 0, marginTop: 16 }}>{isF ? "▶" : isL ? "🏁" : i}</div>
+                {i < EVENTO.ruta.length - 1 && <div style={{ width: 2, flex: 1, background: "linear-gradient(" + color + ", " + (i === EVENTO.ruta.length - 2 ? C.accent : C.cyan) + ")", minHeight: 32, opacity: 0.3, marginTop: 4 }} />}
+              </div>
+              <div style={{ ...styles.card, flex: 1, padding: "14px 16px", marginBottom: 8 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: color }}>{p.punto}</div>
+                  <div style={{ fontSize: 11, color: C.muted, fontFamily: "'JetBrains Mono',monospace", fontWeight: 600 }}>Km {p.km}</div>
+                </div>
+                <div style={{ fontSize: 12, color: C.textSub, marginTop: 4 }}>{p.lugar}</div>
+              </div>
             </div>
-          </div>;
+          );
         })}
       </div>
     </div>
   );
 
-  // MAIN APP
+  // ── MAIN APP ──
   if (scr === "app" && userData) return W(
-    <div style={{ paddingBottom:90 }}>
-      {tab === "home" && <div style={{ padding:20 }}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
-          <div><div style={{ fontSize:20, fontWeight:800 }}>Hola, {userData.nombre.split(" ")[0]}</div><div style={{ fontSize:13, color:C.muted }}>COD Meta 26</div></div>
-          {inscritoEnEvento && inscripcionData ? (
-            <div style={{ background:"rgba(255,77,106,0.1)", borderRadius:12, padding:"8px 12px", textAlign:"center", border:"1px solid rgba(255,77,106,0.2)" }}>
-              <div style={{ fontSize:8, fontWeight:700, color:C.accent, letterSpacing:2 }}>DORSAL</div>
-              <div style={{ fontSize:20, fontWeight:900, fontFamily:"'JetBrains Mono',monospace" }}>#{inscripcionData.dorsal}</div>
+    <div style={{ paddingBottom: 100 }}>
+
+      {/* ── HOME ── */}
+      {tab === "home" && (
+        <div>
+          {/* Header */}
+          <div style={{ padding: "52px 24px 20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div>
+              <div style={{ fontSize: 13, color: C.mutedLight, marginBottom: 4 }}>Hola,</div>
+              <div style={{ fontSize: 22, fontWeight: 800 }}>{userData.nombre.split(" ")[0]} 👋</div>
             </div>
-          ) : (
-            <div style={{ background:"rgba(0,212,255,0.1)", borderRadius:12, padding:"8px 12px", textAlign:"center", border:"1px solid rgba(0,212,255,0.2)" }}>
-              <div style={{ fontSize:8, fontWeight:700, color:C.cyan, letterSpacing:1 }}>SIN DORSAL</div>
-              <div style={{ fontSize:10, color:C.muted, marginTop:2 }}>Inscribete</div>
-            </div>
-          )}
-        </div>
-
-        {/* Banner evento */}
-        <div style={{ background:"linear-gradient(135deg,"+C.card+","+C.cardL+")", borderRadius:20, padding:20, marginBottom:16, border:"0.5px solid "+C.border }}>
-          <div style={{ fontSize:10, fontWeight:700, color:evtPast?C.green:C.gold, letterSpacing:2, marginBottom:8 }}>{evtPast?"EVENTO FINALIZADO":"PROXIMO EVENTO"}</div>
-          <div style={{ fontSize:20, fontWeight:900, marginBottom:4 }}>Rumbo al Mundial</div>
-          <div style={{ fontSize:20, fontWeight:900, color:C.accent, marginBottom:12 }}>Codigo 26</div>
-          <div style={{ display:"flex", flexDirection:"column", gap:4, marginBottom:12 }}>
-            <span style={{ fontSize:12, color:C.muted }}>📅 3 de mayo 2026 · 7:00 AM</span>
-            <span style={{ fontSize:12, color:C.muted }}>📍 Ciclopista Rio Mayo, Cuernavaca</span>
-            <span style={{ fontSize:12, color:C.muted }}>🏃 {inscritos.length} inscritos de {EVENTO.cupoMax} · {lugaresDisp} lugares disponibles</span>
-          </div>
-          <div style={{ display:"flex", gap:8 }}>{["5K","Varonil","Femenil"].map(function(d,i) { return <span key={d} style={{ background:(i===0?C.accent:C.cyan)+"15", padding:"5px 12px", borderRadius:20, fontSize:12, fontWeight:700, color:i===0?C.accent:C.cyan }}>{d}</span>; })}</div>
-        </div>
-
-        <div style={{ marginBottom:16 }}><Countdown target={EVENTO.fechaObj} /></div>
-
-        {/* Inscribirse al evento */}
-        {!inscritoEnEvento ? (
-          <div style={{ background:"rgba(255,77,106,0.06)", borderRadius:16, padding:20, marginBottom:16, border:"1px solid rgba(255,77,106,0.15)" }}>
-            <div style={{ fontSize:15, fontWeight:800, marginBottom:6 }}>Inscribete a Codigo 26</div>
-            <div style={{ fontSize:12, color:C.muted, marginBottom:14 }}>Obtén tu dorsal oficial del 1 al 200 segun el orden de inscripcion. Quedan {lugaresDisp} lugares.</div>
-            {err && <p style={{ color:C.accent, fontSize:13, marginBottom:8, textAlign:"center" }}>{err}</p>}
-            {lugaresDisp > 0 ? (
-              <button style={btnP} onClick={inscribirseAlEvento}>🏃 Inscribirme y obtener mi dorsal</button>
+            {inscritoEnEvento && inscripcionData ? (
+              <div style={{ background: C.card, borderRadius: 16, padding: "10px 16px", textAlign: "center", border: "1px solid " + C.border }}>
+                <div style={{ fontSize: 9, color: C.muted, letterSpacing: 2, fontWeight: 700 }}>DORSAL</div>
+                <div style={{ fontSize: 24, fontWeight: 900, fontFamily: "'JetBrains Mono',monospace", color: C.accent, lineHeight: 1.2 }}>#{inscripcionData.dorsal}</div>
+              </div>
             ) : (
-              <div style={{ textAlign:"center", padding:12, color:C.muted, fontSize:13 }}>El cupo esta lleno</div>
+              <div style={{ background: C.accentDim, borderRadius: 16, padding: "10px 16px", textAlign: "center", border: "1px solid rgba(255,61,90,0.2)", cursor: "pointer" }} onClick={inscribirseAlEvento}>
+                <div style={{ fontSize: 9, color: C.accent, letterSpacing: 1, fontWeight: 700 }}>INSCRIBIRME</div>
+                <div style={{ fontSize: 11, color: C.textSub, marginTop: 4 }}>Gratis</div>
+              </div>
             )}
           </div>
-        ) : (
-          inscripcionData && inscripcionData.tiempo && (
-            <div style={{ background:"rgba(16,185,129,0.08)", borderRadius:16, padding:16, marginBottom:16, border:"1px solid rgba(16,185,129,0.15)" }}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                <div>
-                  <div style={{ fontSize:11, color:C.muted, letterSpacing:2 }}>MI TIEMPO OFICIAL</div>
-                  <div style={{ fontSize:28, fontWeight:900, fontFamily:"'JetBrains Mono',monospace", color:C.green }}>{inscripcionData.tiempo}</div>
-                  <div style={{ fontSize:12, color:C.muted, marginTop:2 }}>Pos #{getPosGeneral(user?user.uid:"")} general · #{getPosRama(user?user.uid:"")} {inscripcionData.genero}</div>
+
+          {/* Evento card */}
+          <div style={{ margin: "0 24px 16px" }}>
+            <div style={{ background: "linear-gradient(145deg, #0E1020, #141828)", borderRadius: 24, padding: 24, border: "1px solid rgba(255,255,255,0.06)", position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", top: -20, right: -20, width: 160, height: 160, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,61,90,0.08), transparent 70%)" }} />
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ ...styles.pill, background: evtPast ? C.greenDim : C.goldDim, color: evtPast ? C.green : C.gold, border: "1px solid " + (evtPast ? "rgba(0,200,150,0.2)" : "rgba(240,165,0,0.2)"), display: "inline-block", marginBottom: 12 }}>
+                  {evtPast ? "✓ FINALIZADO" : "● PRÓXIMO EVENTO"}
                 </div>
-                <button style={{ padding:"10px 16px", borderRadius:12, background:C.accent, color:"#FFF", fontWeight:700, border:"none", cursor:"pointer", fontSize:13 }} onClick={function() { go("certificado"); }}>Ver certificado</button>
+                <div style={{ fontSize: 24, fontWeight: 900, lineHeight: 1.15, marginBottom: 4 }}>Rumbo al Mundial</div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: C.accent, lineHeight: 1.15 }}>Código 26</div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
+                <div style={{ fontSize: 13, color: C.textSub, display: "flex", gap: 8 }}><span>📅</span><span>3 de mayo 2026 · 7:00 AM</span></div>
+                <div style={{ fontSize: 13, color: C.textSub, display: "flex", gap: 8 }}><span>📍</span><span>Cuernavaca, Morelos</span></div>
+                <div style={{ fontSize: 13, color: C.textSub, display: "flex", gap: 8 }}><span>🏃</span><span>{inscritos.length} inscritos · {lugaresDisp} lugares disponibles</span></div>
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                {["5K", "Varonil", "Femenil"].map(function(d, i) {
+                  return <span key={d} style={{ ...styles.pill, background: i === 0 ? C.accentDim : C.cyanDim, color: i === 0 ? C.accent : C.cyan, border: "1px solid " + (i === 0 ? "rgba(255,61,90,0.2)" : "rgba(0,194,224,0.15)") }}>{d}</span>;
+                })}
               </div>
             </div>
-          )
-        )}
-
-        {/* Acciones */}
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-          <button style={Object.assign({},btnS,{margin:0})} onClick={function() { go("map"); }}>🗺️ Ruta</button>
-          <button style={Object.assign({},btnS,{margin:0})} onClick={function() { goTab("leaderboard"); }}>🏆 Rankings</button>
-          {inscritoEnEvento && <button style={Object.assign({},btnS,{margin:0})} onClick={function() { go("cronometro"); }}>⏱️ Mi tiempo</button>}
-          <button style={Object.assign({},btnS,{margin:0})} onClick={function() { go("gps"); }}>📍 GPS</button>
-          <button style={Object.assign({},btnS,{margin:0,gridColumn:"span 2"})} onClick={function() { go("rewards"); }}>🎁 Recompensas Top 10</button>
-        </div>
-      </div>}
-
-      {tab === "search" && <div style={{ padding:16 }}>
-        <div style={{ fontSize:16, fontWeight:800, marginBottom:12 }}>Buscar corredor</div>
-        <div style={{ display:"flex", alignItems:"center", background:C.card, borderRadius:14, padding:"4px 14px", marginBottom:12, border:"1px solid "+C.border }}>
-          <span style={{ fontSize:18, marginRight:10 }}>🔍</span>
-          <input style={Object.assign({},inp,{border:"none",background:"transparent",marginBottom:0,padding:"12px 0"})} placeholder="Nombre o dorsal..." value={search} onChange={function(e) { setSearch(e.target.value); }} />
-        </div>
-        {loadingC ? <div style={{ textAlign:"center", padding:40, color:C.muted }}>Cargando...</div>
-        : filtered.length===0 ? <div style={{ textAlign:"center", padding:40 }}>
-            <div style={{ fontSize:40, marginBottom:12 }}>🏃</div>
-            <div style={{ fontSize:16, fontWeight:700, marginBottom:8 }}>{search?"Sin resultados":"Aun no hay inscritos"}</div>
-            <div style={{ fontSize:13, color:C.muted }}>{search?"Intenta con otro nombre o dorsal":"Se el primero en inscribirte"}</div>
           </div>
-        : <>
-            <div style={{ fontSize:12, color:C.muted, marginBottom:14 }}>{filtered.length} corredor{filtered.length!==1?"es":""}</div>
-            {filtered.map(function(c) {
-              return <div key={c.id} style={{ display:"flex", alignItems:"center", background:C.card, borderRadius:14, padding:14, marginBottom:10, border:"0.5px solid "+C.border }}>
-                <div style={{ width:44, height:44, borderRadius:12, background:"rgba(0,212,255,0.1)", border:"1px solid rgba(0,212,255,0.2)", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, color:C.cyan, fontSize:13, flexShrink:0, marginRight:12 }}>{c.dorsal}</div>
-                <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ fontSize:15, fontWeight:700, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{c.nombre}</div>
-                  <div style={{ fontSize:12, color:C.muted }}>{c.genero} · Dorsal #{c.dorsal}</div>
-                </div>
-                {c.tiempo ? <div style={{ fontSize:14, fontWeight:800, fontFamily:"'JetBrains Mono',monospace", color:C.green }}>{c.tiempo}</div>
-                : <div style={{ fontSize:11, color:C.muted }}>Sin tiempo</div>}
-              </div>;
-            })}
-          </>}
-      </div>}
 
-      {tab === "leaderboard" && <div style={{ padding:16 }}>
-        <div style={{ fontSize:16, fontWeight:700, marginBottom:12 }}>Ranking · Codigo 26</div>
-        <div style={{ display:"flex", gap:8, marginBottom:14 }}>{["Todas","Varonil","Femenil"].map(function(r) { return <span key={r} onClick={function() { setRamaF(r); }} style={{ padding:"8px 18px", borderRadius:20, fontSize:13, fontWeight:600, cursor:"pointer", background:ramaF===r?C.accent:C.card, color:ramaF===r?"#FFF":C.muted, border:"1px solid "+(ramaF===r?C.accent:C.border) }}>{r}</span>; })}</div>
-        {loadingC ? <div style={{ textAlign:"center", padding:40, color:C.muted }}>Cargando...</div>
-        : leaderboard.length===0 ? <div style={{ textAlign:"center", padding:40 }}>
-            <div style={{ fontSize:40, marginBottom:12 }}>🏆</div>
-            <div style={{ fontSize:16, fontWeight:700, marginBottom:8 }}>Ranking vacio</div>
-            <div style={{ fontSize:13, color:C.muted }}>Los resultados apareceran cuando los corredores registren sus tiempos</div>
+          {/* Countdown */}
+          <div style={{ margin: "0 24px 20px" }}>
+            <Countdown target={EVENTO.fechaObj} />
           </div>
-        : leaderboard.map(function(c, i) {
-            var emo = i===0?"🥇":i===1?"🥈":i===2?"🥉":null;
-            return <div key={c.id} style={{ display:"flex", alignItems:"center", background:C.card, borderRadius:14, padding:14, marginBottom:10, border:"0.5px solid "+C.border }}>
-              <div style={{ width:44, height:44, borderRadius:12, background:"rgba(255,77,106,0.08)", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:emo?22:15, flexShrink:0, marginRight:12 }}>{emo||"#"+(i+1)}</div>
-              <div style={{ flex:1 }}>
-                <div style={{ fontSize:15, fontWeight:700 }}>{c.nombre}</div>
-                <div style={{ fontSize:12, color:C.muted }}>Dorsal #{c.dorsal} · {c.genero}</div>
+
+          {/* Inscripción banner si no inscrito */}
+          {!inscritoEnEvento && (
+            <div style={{ margin: "0 24px 20px" }}>
+              <div style={{ background: "linear-gradient(135deg, #1A0008, #200010)", borderRadius: 20, padding: 20, border: "1px solid rgba(255,61,90,0.2)" }}>
+                <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>¿Listo para correr?</div>
+                <div style={{ fontSize: 13, color: C.textSub, marginBottom: 16 }}>Obtén tu dorsal del 1 al 200 según el orden de inscripción. Quedan {lugaresDisp} lugares.</div>
+                {err && <div style={{ fontSize: 12, color: C.accent, marginBottom: 10 }}>{err}</div>}
+                {lugaresDisp > 0 ? (
+                  <button style={styles.btnPrimary} onClick={inscribirseAlEvento}>Inscribirme al evento →</button>
+                ) : (
+                  <div style={{ textAlign: "center", color: C.muted, fontSize: 13, padding: "12px 0" }}>Cupo lleno</div>
+                )}
               </div>
-              {c.tiempo ? <div style={{ fontSize:14, fontWeight:800, fontFamily:"'JetBrains Mono',monospace", color:C.green }}>{c.tiempo}</div>
-              : <div style={{ fontSize:11, color:C.muted }}>Sin tiempo</div>}
-            </div>;
-          })}
-      </div>}
+            </div>
+          )}
 
-      {tab === "profile" && <div style={{ padding:20 }}>
-        <div style={{ textAlign:"center", marginBottom:24 }}>
-          <div style={{ width:80, height:80, borderRadius:40, background:"linear-gradient(135deg,"+C.accent+","+C.gold+")", display:"flex", alignItems:"center", justifyContent:"center", fontSize:28, fontWeight:900, margin:"0 auto 12px" }}>{ini(userData.nombre)}</div>
-          <div style={{ fontSize:22, fontWeight:800 }}>{userData.nombre}</div>
-          <div style={{ fontSize:14, color:C.muted, marginTop:4 }}>{userData.correo}</div>
-        </div>
-        {inscritoEnEvento && inscripcionData ? (
-          <div style={{ background:"rgba(255,77,106,0.08)", borderRadius:18, padding:24, textAlign:"center", marginBottom:16, border:"1px solid rgba(255,77,106,0.15)" }}>
-            <div style={{ fontSize:10, fontWeight:700, color:C.accent, letterSpacing:3, marginBottom:8 }}>MI DORSAL · CODIGO 26</div>
-            <div style={{ fontSize:48, fontWeight:900, fontFamily:"'JetBrains Mono',monospace" }}>#{inscripcionData.dorsal}</div>
-            <div style={{ fontSize:12, color:C.muted, marginTop:6 }}>Inscripcion #{inscripcionData.dorsal} de {EVENTO.cupoMax} · {inscripcionData.fechaInscripcion}</div>
-          </div>
-        ) : (
-          <div style={{ background:"rgba(0,212,255,0.06)", borderRadius:14, padding:16, marginBottom:16, border:"1px solid rgba(0,212,255,0.15)", textAlign:"center" }}>
-            <div style={{ fontSize:13, color:C.muted }}>Aun no te has inscrito al evento Codigo 26</div>
-            <button style={{ marginTop:10, padding:"10px 20px", borderRadius:10, background:C.accent, color:"#FFF", fontWeight:700, border:"none", cursor:"pointer", fontSize:13 }} onClick={function() { goTab("home"); }}>Inscribirme ahora</button>
-          </div>
-        )}
-        {inscripcionData && inscripcionData.tiempo && (
-          <div style={{ background:"rgba(16,185,129,0.08)", borderRadius:14, padding:16, marginBottom:16, border:"1px solid rgba(16,185,129,0.15)", textAlign:"center" }}>
-            <div style={{ fontSize:11, color:C.muted, letterSpacing:2 }}>MI TIEMPO OFICIAL</div>
-            <div style={{ fontSize:32, fontWeight:900, fontFamily:"'JetBrains Mono',monospace", color:C.green, marginTop:4 }}>{inscripcionData.tiempo}</div>
-            <div style={{ fontSize:13, color:C.muted, marginTop:4 }}>Pos #{getPosGeneral(user?user.uid:"")} general · #{getPosRama(user?user.uid:"")} {inscripcionData.genero}</div>
-            {isTop10Rama() && <div style={{ fontSize:12, fontWeight:700, color:C.gold, marginTop:6 }}>🏆 Top 10 {inscripcionData.genero}!</div>}
-            <button style={{ marginTop:10, padding:"8px 20px", borderRadius:10, background:C.accent, color:"#FFF", fontWeight:700, border:"none", cursor:"pointer", fontSize:13 }} onClick={function() { go("certificado"); }}>Ver certificado</button>
-          </div>
-        )}
-        <div style={{ background:C.card, borderRadius:16, padding:18, marginBottom:12 }}>
-          {[["Nombre",userData.nombre],["Correo",userData.correo],["Genero",userData.genero||"-"],["Telefono",userData.telefono||"-"],["Talla",userData.talla||"-"],["Cuenta desde",userData.fechaReg||"-"]].map(function(row) {
-            return <div key={row[0]} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:"0.5px solid "+C.border }}>
-              <span style={{ fontSize:13, color:C.muted }}>{row[0]}</span>
-              <span style={{ fontSize:13, fontWeight:600, textAlign:"right", maxWidth:"55%" }}>{row[1]}</span>
-            </div>;
-          })}
-        </div>
-        <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-          <button style={btnS} onClick={function() { go("rewards"); }}>🎁 Recompensas Top 10</button>
-          {inscritoEnEvento && <button style={btnS} onClick={function() { go("cronometro"); }}>⏱️ Registrar mi tiempo</button>}
-          <button style={btnS} onClick={function() { go("gps"); }}>📍 Rastreo GPS</button>
-          <button style={{ width:"100%", padding:16, borderRadius:14, background:"rgba(255,77,106,0.04)", border:"1px solid rgba(255,77,106,0.2)", color:C.accent, fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }} onClick={doLogout}>Cerrar sesion</button>
-        </div>
-      </div>}
+          {/* Mi tiempo si tiene */}
+          {inscripcionData && inscripcionData.tiempo && (
+            <div style={{ margin: "0 24px 20px" }}>
+              <div style={{ ...styles.card, padding: 20 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ fontSize: 11, color: C.muted, letterSpacing: 1.5, fontWeight: 600, marginBottom: 6 }}>MI TIEMPO OFICIAL</div>
+                    <div style={{ fontSize: 32, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace", color: C.green, letterSpacing: -1 }}>{inscripcionData.tiempo}</div>
+                    <div style={{ fontSize: 12, color: C.textSub, marginTop: 4 }}>Pos #{getPosGeneral(user ? user.uid : "")} general · #{getPosRama(user ? user.uid : "")} {inscripcionData.genero}</div>
+                  </div>
+                  <button style={{ padding: "10px 16px", borderRadius: 14, background: C.accent, color: "#FFF", fontWeight: 700, border: "none", cursor: "pointer", fontSize: 13 }} onClick={function() { go("certificado"); }}>Ver →</button>
+                </div>
+              </div>
+            </div>
+          )}
 
-      <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:430, background:C.bg, borderTop:"0.5px solid "+C.border, display:"flex", justifyContent:"space-around", padding:"10px 0 24px", zIndex:100 }}>
-        {[{id:"home",e:"🏠",l:"Inicio"},{id:"search",e:"🔍",l:"Buscar"},{id:"leaderboard",e:"🏆",l:"Rankings"},{id:"profile",e:"👤",l:"Perfil"}].map(function(t) {
-          return <div key={t.id} onClick={function() { goTab(t.id); }} style={{ textAlign:"center", cursor:"pointer", flex:1 }}>
-            <div style={{ fontSize:22, opacity:tab===t.id?1:0.4 }}>{t.e}</div>
-            <div style={{ fontSize:10, marginTop:4, fontWeight:600, color:tab===t.id?C.accent:C.muted }}>{t.l}</div>
-          </div>;
+          {/* Acciones rápidas */}
+          <div style={{ padding: "0 24px" }}>
+            <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: 1.5, marginBottom: 14 }}>ACCIONES</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              {[
+                { icon: "🗺️", label: "Ver ruta", action: function() { go("map"); } },
+                { icon: "🏆", label: "Rankings", action: function() { goTab("leaderboard"); } },
+                { icon: "🎟️", label: "Recompensas", action: function() { go("rewards"); } },
+                { icon: "🔍", label: "Buscar", action: function() { goTab("search"); } },
+              ].map(function(a) {
+                return (
+                  <button key={a.label} style={{ ...styles.card, padding: "18px 16px", display: "flex", alignItems: "center", gap: 12, border: "1px solid " + C.border, cursor: "pointer", background: C.card }} onClick={a.action}>
+                    <span style={{ fontSize: 22 }}>{a.icon}</span>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{a.label}</span>
+                  </button>
+                );
+              })}
+              {inscritoEnEvento && (
+                <button style={{ ...styles.card, padding: "18px 16px", display: "flex", alignItems: "center", gap: 12, border: "1px solid rgba(0,200,150,0.2)", background: C.greenDim, cursor: "pointer", gridColumn: "span 2" }} onClick={function() { go("carrera"); }}>
+                  <span style={{ fontSize: 22 }}>⏱️</span>
+                  <div style={{ textAlign: "left" }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: C.green }}>Iniciar carrera</div>
+                    <div style={{ fontSize: 12, color: C.textSub }}>GPS + cronómetro + certificado</div>
+                  </div>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── BUSCAR ── */}
+      {tab === "search" && (
+        <div style={{ padding: "52px 24px 0" }}>
+          <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 20 }}>Buscar corredor</div>
+          <div style={{ display: "flex", alignItems: "center", background: C.card, borderRadius: 16, padding: "4px 16px", marginBottom: 20, border: "1px solid " + C.border }}>
+            <span style={{ fontSize: 16, marginRight: 10, color: C.muted }}>🔍</span>
+            <input style={{ ...styles.input, border: "none", background: "transparent", marginBottom: 0, padding: "14px 0", fontSize: 15 }} placeholder="Nombre o número de dorsal..." value={search} onChange={function(e) { setSearch(e.target.value); }} />
+          </div>
+          {loadingC ? (
+            <div style={{ textAlign: "center", padding: 60, color: C.muted }}>Cargando...</div>
+          ) : filtered.length === 0 ? (
+            <div style={{ textAlign: "center", padding: 60 }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>🏃</div>
+              <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 8 }}>{search ? "Sin resultados" : "Aún no hay inscritos"}</div>
+              <div style={{ fontSize: 14, color: C.mutedLight }}>{search ? "Intenta con otro nombre o dorsal" : "Sé el primero en inscribirte"}</div>
+            </div>
+          ) : (
+            <>
+              <div style={{ fontSize: 13, color: C.muted, marginBottom: 16 }}>{filtered.length} corredor{filtered.length !== 1 ? "es" : ""}</div>
+              {filtered.map(function(c) {
+                return (
+                  <div key={c.id} style={{ ...styles.card, display: "flex", alignItems: "center", padding: 16, marginBottom: 10 }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 14, background: C.accentDim, border: "1px solid rgba(255,61,90,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: C.accent, fontSize: 15, flexShrink: 0, marginRight: 14, fontFamily: "'JetBrains Mono',monospace" }}>{c.dorsal}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.nombre}</div>
+                      <div style={{ fontSize: 12, color: C.textSub, marginTop: 3 }}>{c.genero} · Dorsal #{c.dorsal}</div>
+                    </div>
+                    {c.tiempo ? (
+                      <div style={{ textAlign: "right", flexShrink: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace", color: C.green }}>{c.tiempo}</div>
+                        <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{calcRitmo(c.tiempo, 5)} /km</div>
+                      </div>
+                    ) : (
+                      <div style={{ ...styles.pill, background: C.card, color: C.muted, border: "1px solid " + C.border, fontSize: 11 }}>Sin tiempo</div>
+                    )}
+                  </div>
+                );
+              })}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── LEADERBOARD ── */}
+      {tab === "leaderboard" && (
+        <div style={{ padding: "52px 24px 0" }}>
+          <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 20 }}>Ranking · Código 26</div>
+          <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+            {["Todas", "Varonil", "Femenil"].map(function(r) {
+              return (
+                <button key={r} onClick={function() { setRamaF(r); }} style={{ padding: "9px 18px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", background: ramaF === r ? C.accent : C.card, color: ramaF === r ? "#FFF" : C.textSub, border: "1px solid " + (ramaF === r ? C.accent : C.border), fontFamily: "inherit" }}>{r}</button>
+              );
+            })}
+          </div>
+          {loadingC ? (
+            <div style={{ textAlign: "center", padding: 60, color: C.muted }}>Cargando ranking...</div>
+          ) : leaderboard.length === 0 ? (
+            <div style={{ textAlign: "center", padding: 60 }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>🏆</div>
+              <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 8 }}>Ranking vacío</div>
+              <div style={{ fontSize: 14, color: C.mutedLight }}>Los resultados aparecerán cuando los corredores registren sus tiempos</div>
+            </div>
+          ) : (
+            <>
+              {leaderboard.slice(0, 3).length === 3 && (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 16 }}>
+                  {leaderboard.slice(0, 3).map(function(c, i) {
+                    var emo = ["🥇", "🥈", "🥉"][i];
+                    var bg = ["rgba(240,165,0,0.1)", "rgba(180,180,180,0.08)", "rgba(180,100,50,0.08)"][i];
+                    var border = ["rgba(240,165,0,0.25)", "rgba(180,180,180,0.15)", "rgba(180,100,50,0.15)"][i];
+                    return (
+                      <div key={c.id} style={{ background: bg, borderRadius: 18, padding: "16px 12px", textAlign: "center", border: "1px solid " + border }}>
+                        <div style={{ fontSize: 30, marginBottom: 8 }}>{emo}</div>
+                        <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, lineHeight: 1.3 }}>{c.nombre.split(" ").slice(0, 2).join(" ")}</div>
+                        {c.tiempo && <div style={{ fontSize: 13, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace", color: C.green }}>{c.tiempo}</div>}
+                        <div style={{ fontSize: 10, color: C.muted, marginTop: 4 }}>{c.genero}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {leaderboard.slice(leaderboard.length >= 3 ? 3 : 0).map(function(c, i) {
+                var pos = (leaderboard.length >= 3 ? 3 : 0) + i + 1;
+                return (
+                  <div key={c.id} style={{ ...styles.card, display: "flex", alignItems: "center", padding: 16, marginBottom: 10 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 12, background: C.surface, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 14, flexShrink: 0, marginRight: 14, color: C.mutedLight }}>#{pos}</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 15, fontWeight: 700 }}>{c.nombre}</div>
+                      <div style={{ fontSize: 12, color: C.textSub, marginTop: 2 }}>Dorsal #{c.dorsal} · {c.genero}</div>
+                    </div>
+                    {c.tiempo ? (
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: 14, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace", color: C.green }}>{c.tiempo}</div>
+                        <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{calcRitmo(c.tiempo, 5)}</div>
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: 11, color: C.muted }}>Sin tiempo</div>
+                    )}
+                  </div>
+                );
+              })}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── PERFIL ── */}
+      {tab === "profile" && (
+        <div style={{ padding: "52px 24px 0" }}>
+          {/* Avatar */}
+          <div style={{ textAlign: "center", marginBottom: 28 }}>
+            <div style={{ width: 88, height: 88, borderRadius: 28, background: "linear-gradient(135deg, #FF3D5A, #D4002D)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, fontWeight: 900, margin: "0 auto 16px" }}>{ini(userData.nombre)}</div>
+            <div style={{ fontSize: 22, fontWeight: 800 }}>{userData.nombre}</div>
+            <div style={{ fontSize: 14, color: C.mutedLight, marginTop: 4 }}>{userData.correo}</div>
+          </div>
+
+          {/* Dorsal */}
+          {inscritoEnEvento && inscripcionData ? (
+            <div style={{ background: "linear-gradient(135deg, #1A0008, #200010)", borderRadius: 20, padding: 24, textAlign: "center", marginBottom: 16, border: "1px solid rgba(255,61,90,0.2)" }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: C.accent, letterSpacing: 3, marginBottom: 8 }}>DORSAL · CÓDIGO 26</div>
+              <div style={{ fontSize: 56, fontWeight: 900, fontFamily: "'JetBrains Mono',monospace", color: "#FFF", letterSpacing: -2 }}>#{inscripcionData.dorsal}</div>
+              <div style={{ fontSize: 12, color: C.textSub, marginTop: 6 }}>Inscripción #{inscripcionData.dorsal} de {EVENTO.cupoMax} · {inscripcionData.fechaInscripcion}</div>
+            </div>
+          ) : (
+            <div style={{ ...styles.card, padding: 20, marginBottom: 16, textAlign: "center", border: "1px solid rgba(255,61,90,0.15)" }}>
+              <div style={{ fontSize: 13, color: C.textSub, marginBottom: 12 }}>Aún no te has inscrito al evento</div>
+              <button style={{ padding: "11px 24px", borderRadius: 14, background: C.accent, color: "#FFF", fontWeight: 700, border: "none", cursor: "pointer", fontSize: 14, fontFamily: "inherit" }} onClick={function() { goTab("home"); }}>Inscribirme ahora</button>
+            </div>
+          )}
+
+          {/* Mi tiempo */}
+          {inscripcionData && inscripcionData.tiempo && (
+            <div style={{ ...styles.card, padding: 20, marginBottom: 16 }}>
+              <div style={{ fontSize: 11, color: C.muted, letterSpacing: 1.5, fontWeight: 700, marginBottom: 10 }}>MI RESULTADO</div>
+              <div style={{ fontSize: 36, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace", color: C.green, letterSpacing: -1, marginBottom: 6 }}>{inscripcionData.tiempo}</div>
+              <div style={{ fontSize: 13, color: C.textSub, marginBottom: 12 }}>
+                Pos #{getPosGeneral(user ? user.uid : "")} general · #{getPosRama(user ? user.uid : "")} {inscripcionData.genero}
+                {isTop10() && <span style={{ color: C.gold, fontWeight: 700 }}> · 🏆 Top 10</span>}
+              </div>
+              <button style={{ ...styles.btnSecondary, fontSize: 14, padding: "12px 16px" }} onClick={function() { go("certificado"); }}>Ver mi certificado</button>
+            </div>
+          )}
+
+          {/* Datos */}
+          <div style={{ ...styles.card, padding: "8px 20px", marginBottom: 16 }}>
+            {[["Nombre", userData.nombre], ["Correo", userData.correo], ["Género", userData.genero || "-"], ["Teléfono", userData.telefono || "-"], ["Talla", userData.talla || "-"], ["Cuenta desde", userData.fechaReg || "-"]].map(function(row) {
+              return (
+                <div key={row[0]} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 0", borderBottom: "1px solid " + C.border }}>
+                  <span style={{ fontSize: 14, color: C.mutedLight }}>{row[0]}</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, textAlign: "right", maxWidth: "58%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row[1]}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Acciones */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingBottom: 20 }}>
+            {inscritoEnEvento && <button style={styles.btnSecondary} onClick={function() { go("carrera"); }}>⏱️ Iniciar carrera</button>}
+            <button style={styles.btnSecondary} onClick={function() { go("rewards"); }}>🎟️ Ver recompensas</button>
+            <button style={{ ...styles.btnSecondary, color: C.accent, borderColor: "rgba(255,61,90,0.2)" }} onClick={doLogout}>Cerrar sesión</button>
+          </div>
+        </div>
+      )}
+
+      {/* TAB BAR */}
+      <div style={styles.tabBar}>
+        {[{ id: "home", icon: "⬜", label: "Inicio" }, { id: "search", icon: "🔍", label: "Buscar" }, { id: "leaderboard", icon: "🏆", label: "Rankings" }, { id: "profile", icon: "👤", label: "Perfil" }].map(function(t) {
+          var active = tab === t.id;
+          return (
+            <div key={t.id} onClick={function() { goTab(t.id); }} style={{ textAlign: "center", cursor: "pointer", flex: 1, position: "relative" }}>
+              {active && <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", width: 32, height: 3, borderRadius: 2, background: C.accent }} />}
+              <div style={{ fontSize: 20, opacity: active ? 1 : 0.35, marginBottom: 4 }}>{t.id === "home" ? "🏠" : t.id === "search" ? "🔍" : t.id === "leaderboard" ? "🏆" : "👤"}</div>
+              <div style={{ fontSize: 10, fontWeight: active ? 700 : 500, color: active ? C.accent : C.muted, letterSpacing: 0.3 }}>{t.label}</div>
+            </div>
+          );
         })}
       </div>
     </div>
   );
 
-  return W(<div style={{ padding:40, textAlign:"center" }}><p style={{ color:C.muted }}>Cargando...</p></div>);
+  return W(<div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}><div style={{ fontSize: 14, color: C.muted }}>Cargando...</div></div>);
 }
-
-var lbl = { display:"block", fontSize:13, fontWeight:600, color:"#6B7194", marginBottom:8, marginLeft:4 };
-var inp = { width:"100%", background:"rgba(255,255,255,0.05)", borderRadius:14, padding:16, fontSize:16, color:"#FFF", border:"1px solid rgba(255,255,255,0.08)", outline:"none", boxSizing:"border-box", marginBottom:18, fontFamily:"inherit" };
-var btnP = { width:"100%", padding:18, borderRadius:14, background:"#FF4D6A", color:"#FFF", fontSize:16, fontWeight:800, border:"none", cursor:"pointer", fontFamily:"inherit" };
-var btnS = { width:"100%", padding:16, borderRadius:14, background:"rgba(255,255,255,0.04)", color:"#FFF", fontSize:16, fontWeight:700, border:"1px solid rgba(255,255,255,0.08)", cursor:"pointer", fontFamily:"inherit" };
