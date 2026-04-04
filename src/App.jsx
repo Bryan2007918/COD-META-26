@@ -5,7 +5,7 @@ import { doc, setDoc, getDoc, collection, getDocs, updateDoc, runTransaction } f
 
 var EVENTO = {
   id: "codigo26",
-  nombre: "Código 26",
+  nombre: "Codigo 26",
   subNombre: "Rumbo al Mundial",
   fecha: "3 de mayo de 2026",
   fechaObj: new Date(2026, 4, 3, 7, 0, 0),
@@ -16,14 +16,11 @@ var EVENTO = {
   estado: "proximo",
   ruta: [
     { punto: "Salida", lugar: "City Market (Juan Pablo II)", km: "0.0" },
-    { punto: "Tramo 1", lugar: "Av. Juan Pablo II hacia el sur", km: "0.3" },
-    { punto: "Tramo 2", lugar: "Avenida Río Mayo", km: "0.8" },
-    { punto: "Tramo 3", lugar: "Avenida Teopanzolco", km: "1.5" },
-    { punto: "Tramo 4", lugar: "Glorieta Calle Río Tepozteco", km: "2.2" },
-    { punto: "Tramo 5", lugar: "Avenida San Diego", km: "3.0" },
-    { punto: "Hidratación", lugar: "Hospital San Diego", km: "3.8" },
-    { punto: "Tramo 7", lugar: "Juan Pablo II", km: "4.3" },
-    { punto: "Meta", lugar: "City Market (Juan Pablo II)", km: "5.0" },
+    { punto: "Km 1", lugar: "Los Quelites · Av. Teopanzolco", km: "1.0" },
+    { punto: "Km 2", lugar: "Adelante de Fonda La Güera", km: "2.0" },
+    { punto: "Km 3", lugar: "Cerca de Mi Gusto Es · Río Mayo", km: "3.0" },
+    { punto: "Km 4", lugar: "Juan Pablo II", km: "4.0" },
+    { punto: "Meta", lugar: "Atrás de City Market", km: "5.0" },
   ],
 };
 
@@ -92,7 +89,7 @@ function Countdown({ target }) {
 
 // ── GPS + CRONÓMETRO INTEGRADO ──
 function CarreraActiva({ onTerminar, onBack }) {
-  var [phase, setPhase] = useState("ready"); // ready | running | finished
+  var [phase, setPhase] = useState("ready");
   var [elapsed, setElapsed] = useState(0);
   var [puntos, setPuntos] = useState([]);
   var [distancia, setDistancia] = useState(0);
@@ -182,7 +179,6 @@ function CarreraActiva({ onTerminar, onBack }) {
         <div style={{ fontSize: 18, fontWeight: 700 }}>{ phase === "ready" ? "Listo para correr" : "En carrera..." }</div>
       </div>
 
-      {/* Cronómetro principal */}
       <div style={{ ...styles.card, padding: 28, textAlign: "center", marginBottom: 16 }}>
         <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, letterSpacing: 2, marginBottom: 16 }}>CRONÓMETRO</div>
         <div style={{ fontSize: 64, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace", color: phase === "running" ? C.green : C.text, letterSpacing: -3, lineHeight: 1 }}>{timeStr}</div>
@@ -194,7 +190,6 @@ function CarreraActiva({ onTerminar, onBack }) {
         )}
       </div>
 
-      {/* Métricas GPS */}
       {phase === "running" && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
           <div style={{ ...styles.card, padding: "16px 14px", textAlign: "center" }}>
@@ -216,7 +211,6 @@ function CarreraActiva({ onTerminar, onBack }) {
         </div>
       )}
 
-      {/* Ruta del evento como referencia */}
       {phase === "running" && (
         <div style={{ ...styles.card, padding: "16px 18px", marginBottom: 20 }}>
           <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 12, letterSpacing: 1 }}>PUNTOS DE REFERENCIA</div>
@@ -465,7 +459,7 @@ export default function App() {
   if (scr === "login") return W(
     <div style={{ padding: "0 24px 40px", minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center" }}>
       <div style={{ marginBottom: 40 }}>
-        <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: -0.5, lineHeight: 1.2, marginBottom: 8 }}>Bienvenido{"\n"}<span style={{ color: C.accent }}>Código 26</span></div>
+        <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: -0.5, lineHeight: 1.2, marginBottom: 8 }}>Bienvenido{"\n"}<span style={{ color: C.accent }}>Codigo 26</span></div>
         <div style={{ fontSize: 14, color: C.mutedLight }}>Cuernavaca, Morelos</div>
       </div>
       <label style={styles.label}>Correo electrónico</label>
@@ -536,7 +530,7 @@ export default function App() {
       <div style={{ fontSize: 15, color: C.textSub, marginBottom: 32 }}>Hola, {userData.nombre.split(" ")[0]}</div>
       <div style={{ ...styles.card, padding: 20, width: "100%", marginBottom: 24, textAlign: "left" }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: C.cyan, marginBottom: 8 }}>Siguiente paso</div>
-        <div style={{ fontSize: 14, color: C.textSub, lineHeight: 1.7 }}>Inscríbete al evento Código 26 para obtener tu dorsal oficial (del 1 al 200 por orden de registro).</div>
+        <div style={{ fontSize: 14, color: C.textSub, lineHeight: 1.7 }}>Inscríbete al evento Codigo 26 para obtener tu dorsal oficial (del 1 al 200 por orden de registro).</div>
       </div>
       <button style={{ ...styles.btnPrimary, width: "100%" }} onClick={function() { setTab("home"); go("app"); }}>Entrar e inscribirme →</button>
     </div>
@@ -546,7 +540,7 @@ export default function App() {
   if (scr === "bienvenidaEvento" && inscripcionData) return W(
     <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", minHeight: "100vh", padding: 24, textAlign: "center" }}>
       <div style={{ position: "absolute", top: "8%", left: "50%", transform: "translateX(-50%)", width: 280, height: 280, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,61,90,0.07), transparent 70%)" }} />
-      <div style={{ fontSize: 13, fontWeight: 700, color: C.accent, letterSpacing: 2, marginBottom: 20 }}>CÓDIGO 26 · 5K</div>
+      <div style={{ fontSize: 13, fontWeight: 700, color: C.accent, letterSpacing: 2, marginBottom: 20 }}>CODIGO 26 · 5K</div>
       <div style={{ fontSize: 100, fontWeight: 900, fontFamily: "'JetBrains Mono',monospace", lineHeight: 1, letterSpacing: -4, color: "#FFF", marginBottom: 8 }}>{inscripcionData.dorsal}</div>
       <div style={{ fontSize: 14, color: C.mutedLight, marginBottom: 32 }}>Tu dorsal oficial · Inscripción #{inscripcionData.dorsal} de {EVENTO.cupoMax}</div>
       <div style={{ ...styles.card, padding: 20, width: "100%", marginBottom: 24 }}>
@@ -569,9 +563,7 @@ export default function App() {
           <div style={styles.backBtn} onClick={function() { go("app"); }}>←</div>
           <div style={{ fontSize: 18, fontWeight: 700 }}>Certificado de finisher</div>
         </div>
-        {/* Certificado visual */}
         <div style={{ background: "#FAFAF2", borderRadius: 24, padding: 32, textAlign: "center", marginBottom: 20, border: "2px solid #E8C840", position: "relative", overflow: "hidden" }}>
-          {/* Esquinas decorativas */}
           {[["top","left"],["top","right"],["bottom","left"],["bottom","right"]].map(function(pos) {
             return <div key={pos.join()} style={{ position:"absolute", [pos[0]]:16, [pos[1]]:16, width:24, height:24, borderTop:pos[0]==="top"?"2px solid #D4A020":"none", borderBottom:pos[0]==="bottom"?"2px solid #D4A020":"none", borderLeft:pos[1]==="left"?"2px solid #D4A020":"none", borderRight:pos[1]==="right"?"2px solid #D4A020":"none", borderRadius:2 }} />;
           })}
@@ -582,7 +574,7 @@ export default function App() {
           <div style={{ fontSize: 22, fontWeight: 900, color: "#1A1208", marginBottom: 4, lineHeight: 1.2 }}>{inscripcionData.nombre}</div>
           <div style={{ fontSize: 12, color: "#6A5A40", marginBottom: 16 }}>Dorsal #{inscripcionData.dorsal} · {inscripcionData.genero}</div>
           <div style={{ fontSize: 12, color: "#6A5A40", marginBottom: 4 }}>completó exitosamente</div>
-          <div style={{ fontSize: 18, fontWeight: 900, color: "#1A1208", marginBottom: 4 }}>Rumbo al Mundial · Código 26</div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: "#1A1208", marginBottom: 4 }}>Rumbo al Mundial · Codigo 26</div>
           <div style={{ fontSize: 12, color: "#9A9080", marginBottom: 20 }}>5K · Cuernavaca, Morelos</div>
           <div style={{ display: "flex", justifyContent: "center", gap: 28, marginBottom: 16 }}>
             {[{ l: "TIEMPO", v: inscripcionData.tiempo || "--:--:--" }, { l: "POSICIÓN", v: posGen > 0 ? "#" + posGen : "-" }, { l: "RITMO", v: ritmoC }].map(function(s) {
@@ -604,7 +596,7 @@ export default function App() {
     );
   }
 
-  // ── CARRERA ACTIVA (GPS + CRONÓMETRO) ──
+  // ── CARRERA ACTIVA ──
   if (scr === "carrera") return W(
     <CarreraActiva
       onTerminar={function(tiempo, actividad) {
@@ -627,8 +619,6 @@ export default function App() {
         <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>Top 10 por Rama</div>
         <div style={{ fontSize: 14, color: C.textSub, lineHeight: 1.6 }}>Los primeros 10 en llegar a la meta en categoría <strong style={{ color: C.text }}>Varonil</strong> y los primeros 10 en <strong style={{ color: C.text }}>Femenil</strong> obtienen:</div>
       </div>
-
-      {/* Recompensa principal */}
       <div style={{ background: "linear-gradient(135deg, #1A1400, #201800)", borderRadius: 20, padding: 24, marginBottom: 16, border: "1px solid rgba(240,165,0,0.3)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <div style={{ width: 60, height: 60, borderRadius: 18, background: "rgba(240,165,0,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>🎟️</div>
@@ -639,8 +629,6 @@ export default function App() {
           </div>
         </div>
       </div>
-
-      {/* Estado del usuario */}
       {isTop10() ? (
         <div style={{ ...styles.card, padding: 20, border: "1px solid rgba(0,200,150,0.2)", background: C.greenDim, textAlign: "center" }}>
           <div style={{ fontSize: 24, marginBottom: 8 }}>🎉</div>
@@ -697,7 +685,6 @@ export default function App() {
       {/* ── HOME ── */}
       {tab === "home" && (
         <div>
-          {/* Header */}
           <div style={{ padding: "52px 24px 20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div>
               <div style={{ fontSize: 13, color: C.mutedLight, marginBottom: 4 }}>Hola,</div>
@@ -716,7 +703,6 @@ export default function App() {
             )}
           </div>
 
-          {/* Evento card */}
           <div style={{ margin: "0 24px 16px" }}>
             <div style={{ background: "linear-gradient(145deg, #0E1020, #141828)", borderRadius: 24, padding: 24, border: "1px solid rgba(255,255,255,0.06)", position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: -20, right: -20, width: 160, height: 160, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,61,90,0.08), transparent 70%)" }} />
@@ -725,7 +711,7 @@ export default function App() {
                   {evtPast ? "✓ FINALIZADO" : "● PRÓXIMO EVENTO"}
                 </div>
                 <div style={{ fontSize: 24, fontWeight: 900, lineHeight: 1.15, marginBottom: 4 }}>Rumbo al Mundial</div>
-                <div style={{ fontSize: 24, fontWeight: 900, color: C.accent, lineHeight: 1.15 }}>Código 26</div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: C.accent, lineHeight: 1.15 }}>Codigo 26</div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
                 <div style={{ fontSize: 13, color: C.textSub, display: "flex", gap: 8 }}><span>📅</span><span>3 de mayo 2026 · 7:00 AM</span></div>
@@ -740,12 +726,10 @@ export default function App() {
             </div>
           </div>
 
-          {/* Countdown */}
           <div style={{ margin: "0 24px 20px" }}>
             <Countdown target={EVENTO.fechaObj} />
           </div>
 
-          {/* Inscripción banner si no inscrito */}
           {!inscritoEnEvento && (
             <div style={{ margin: "0 24px 20px" }}>
               <div style={{ background: "linear-gradient(135deg, #1A0008, #200010)", borderRadius: 20, padding: 20, border: "1px solid rgba(255,61,90,0.2)" }}>
@@ -761,7 +745,6 @@ export default function App() {
             </div>
           )}
 
-          {/* Mi tiempo si tiene */}
           {inscripcionData && inscripcionData.tiempo && (
             <div style={{ margin: "0 24px 20px" }}>
               <div style={{ ...styles.card, padding: 20 }}>
@@ -777,7 +760,6 @@ export default function App() {
             </div>
           )}
 
-          {/* Acciones rápidas */}
           <div style={{ padding: "0 24px" }}>
             <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: 1.5, marginBottom: 14 }}>ACCIONES</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -854,7 +836,7 @@ export default function App() {
       {/* ── LEADERBOARD ── */}
       {tab === "leaderboard" && (
         <div style={{ padding: "52px 24px 0" }}>
-          <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 20 }}>Ranking · Código 26</div>
+          <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 20 }}>Ranking · Codigo 26</div>
           <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
             {["Todas", "Varonil", "Femenil"].map(function(r) {
               return (
@@ -917,17 +899,15 @@ export default function App() {
       {/* ── PERFIL ── */}
       {tab === "profile" && (
         <div style={{ padding: "52px 24px 0" }}>
-          {/* Avatar */}
           <div style={{ textAlign: "center", marginBottom: 28 }}>
             <div style={{ width: 88, height: 88, borderRadius: 28, background: "linear-gradient(135deg, #FF3D5A, #D4002D)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, fontWeight: 900, margin: "0 auto 16px" }}>{ini(userData.nombre)}</div>
             <div style={{ fontSize: 22, fontWeight: 800 }}>{userData.nombre}</div>
             <div style={{ fontSize: 14, color: C.mutedLight, marginTop: 4 }}>{userData.correo}</div>
           </div>
 
-          {/* Dorsal */}
           {inscritoEnEvento && inscripcionData ? (
             <div style={{ background: "linear-gradient(135deg, #1A0008, #200010)", borderRadius: 20, padding: 24, textAlign: "center", marginBottom: 16, border: "1px solid rgba(255,61,90,0.2)" }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: C.accent, letterSpacing: 3, marginBottom: 8 }}>DORSAL · CÓDIGO 26</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: C.accent, letterSpacing: 3, marginBottom: 8 }}>DORSAL · CODIGO 26</div>
               <div style={{ fontSize: 56, fontWeight: 900, fontFamily: "'JetBrains Mono',monospace", color: "#FFF", letterSpacing: -2 }}>#{inscripcionData.dorsal}</div>
               <div style={{ fontSize: 12, color: C.textSub, marginTop: 6 }}>Inscripción #{inscripcionData.dorsal} de {EVENTO.cupoMax} · {inscripcionData.fechaInscripcion}</div>
             </div>
@@ -938,7 +918,6 @@ export default function App() {
             </div>
           )}
 
-          {/* Mi tiempo */}
           {inscripcionData && inscripcionData.tiempo && (
             <div style={{ ...styles.card, padding: 20, marginBottom: 16 }}>
               <div style={{ fontSize: 11, color: C.muted, letterSpacing: 1.5, fontWeight: 700, marginBottom: 10 }}>MI RESULTADO</div>
@@ -951,7 +930,6 @@ export default function App() {
             </div>
           )}
 
-          {/* Datos */}
           <div style={{ ...styles.card, padding: "8px 20px", marginBottom: 16 }}>
             {[["Nombre", userData.nombre], ["Correo", userData.correo], ["Género", userData.genero || "-"], ["Teléfono", userData.telefono || "-"], ["Talla", userData.talla || "-"], ["Cuenta desde", userData.fechaReg || "-"]].map(function(row) {
               return (
@@ -963,7 +941,6 @@ export default function App() {
             })}
           </div>
 
-          {/* Acciones */}
           <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingBottom: 20 }}>
             {inscritoEnEvento && <button style={styles.btnSecondary} onClick={function() { go("carrera"); }}>⏱️ Iniciar carrera</button>}
             <button style={styles.btnSecondary} onClick={function() { go("rewards"); }}>🎟️ Ver recompensas</button>
