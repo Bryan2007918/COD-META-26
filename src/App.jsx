@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { auth, db } from "./firebase.js";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
-import { doc, setDoc, getDoc, collection, getDocs } from "firebase/firestore";
+import { doc, setDoc, getDoc, collection, getDocs, updateDoc } from "firebase/firestore";
 
 var EVENTO = {
   nombre: "Rumbo al Mundial Codigo 26",
@@ -27,14 +27,35 @@ var EVENTO = {
 };
 
 var CUPONES = [
-  { id:1, titulo:"Cupon #1 - Top 50", desc:"Recompensa exclusiva para finalistas Top 50. Proximamente.", icono:"🎁", color:"#FF4D6A" },
-  { id:2, titulo:"Cupon #2 - Top 50", desc:"Descuento en tienda deportiva. Proximamente.", icono:"👟", color:"#F5A623" },
-  { id:3, titulo:"Cupon #3 - Top 50", desc:"Beneficio de patrocinador. Proximamente.", icono:"🏋️", color:"#00D4FF" },
-  { id:4, titulo:"Cupon #4 - Top 50", desc:"Recompensa por tu desempeno. Proximamente.", icono:"🎯", color:"#10B981" },
-  { id:5, titulo:"Cupon #5 - Top 50", desc:"Premio especial. Proximamente.", icono:"⭐", color:"#8B5CF6" },
+  { id:1, titulo:"Cupon #1 - Top 10", desc:"Recompensa exclusiva para Top 10 varonil y femenil. Proximamente.", icono:"🎁", color:"#FF4D6A" },
+  { id:2, titulo:"Cupon #2 - Top 10", desc:"Descuento en tienda deportiva. Proximamente.", icono:"👟", color:"#F5A623" },
+  { id:3, titulo:"Cupon #3 - Top 10", desc:"Beneficio de patrocinador. Proximamente.", icono:"🏋️", color:"#00D4FF" },
+  { id:4, titulo:"Cupon #4 - Top 10", desc:"Recompensa por tu desempeno. Proximamente.", icono:"🎯", color:"#10B981" },
+  { id:5, titulo:"Cupon #5 - Top 10", desc:"Premio especial de la organizacion. Proximamente.", icono:"⭐", color:"#8B5CF6" },
 ];
 
 var C = { bg:"#0A0D1B", card:"#111528", cardL:"#181D35", accent:"#FF4D6A", gold:"#F5A623", cyan:"#00D4FF", green:"#10B981", muted:"#6B7194", border:"rgba(255,255,255,0.06)", purple:"#8B5CF6" };
+
+function padT(n) { return String(n).padStart(2, "0"); }
+
+function secsToTime(s) {
+  var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60;
+  return padT(h) + ":" + padT(m) + ":" + padT(ss);
+}
+
+function timeToSecs(t) {
+  if (!t) return 0;
+  var p = t.split(":").map(Number);
+  return p[0] * 3600 + p[1] * 60 + (p[2] || 0);
+}
+
+function calcRitmo(timeStr, km) {
+  var s = timeToSecs(timeStr);
+  if (!s || !km) return "-";
+  var minPerKm = (s / 60) / km;
+  var m = Math.floor(minPerKm), ss = Math.round((minPerKm - m) * 60);
+  return m + ":" + padT(ss);
+}
 
 function Countdown(props) {
   var _s = useState({ d:0, h:0, m:0, s:0, past:false }), l = _s[0], setL = _s[1];
@@ -53,6 +74,184 @@ function Countdown(props) {
   </div>;
 }
 
+// Cronometro en vivo
+function Cronometro(props) {
+  var _t = useState(0), elapsed = _t[0], setElapsed = _t[1];
+  var _running = useState(false), running = _running[0], setRunning = _running[1];
+  var startRef = useRef(null);
+  var ivRef = useRef(null);
+
+  function start() {
+    startRef.current = Date.now() - elapsed * 1000;
+    ivRef.current = setInterval(function() {
+      setElapsed(Math.floor((Date.now() - startRef.current) / 1000));
+    }, 1000);
+    setRunning(true);
+  }
+
+  function stop() {
+    clearInterval(ivRef.current);
+    setRunning(false);
+  }
+
+  function reset() {
+    clearInterval(ivRef.current);
+    setRunning(false);
+    setElapsed(0);
+  }
+
+  useEffect(function() { return function() { clearInterval(ivRef.current); }; }, []);
+
+  var timeStr = secsToTime(elapsed);
+
+  return <div style={{ background:C.card, borderRadius:20, padding:24, textAlign:"center", border:"0.5px solid " + C.border, marginBottom:16 }}>
+    <div style={{ fontSize:11, fontWeight:700, color:C.cyan, letterSpacing:3, marginBottom:12 }}>CRONOMETRO</div>
+    <div style={{ fontSize:52, fontWeight:900, fontFamily:"'JetBrains Mono',monospace", color:running ? C.green : C.cyan, marginBottom:20 }}>{timeStr}</div>
+    <div style={{ display:"flex", gap:10, justifyContent:"center", marginBottom:16 }}>
+      {!running ? (
+        <button style={{ padding:"12px 28px", borderRadius:12, background:C.green, color:"#FFF", fontWeight:700, border:"none", cursor:"pointer", fontSize:15 }} onClick={start}>▶ Iniciar</button>
+      ) : (
+        <button style={{ padding:"12px 28px", borderRadius:12, background:C.accent, color:"#FFF", fontWeight:700, border:"none", cursor:"pointer", fontSize:15 }} onClick={stop}>⏸ Pausar</button>
+      )}
+      <button style={{ padding:"12px 20px", borderRadius:12, background:"rgba(255,255,255,0.06)", color:"#FFF", fontWeight:700, border:"1px solid rgba(255,255,255,0.1)", cursor:"pointer", fontSize:15 }} onClick={reset}>↺</button>
+    </div>
+    {!running && elapsed > 0 && (
+      <button style={{ width:"100%", padding:14, borderRadius:12, background:C.accent, color:"#FFF", fontWeight:800, border:"none", cursor:"pointer", fontSize:15 }} onClick={function() { props.onGuardar(timeStr); }}>
+        ✅ Registrar este tiempo ({timeStr})
+      </button>
+    )}
+  </div>;
+}
+
+// Rastreo GPS tipo Strava
+function RastreoGPS(props) {
+  var _tracking = useState(false), tracking = _tracking[0], setTracking = _tracking[1];
+  var _puntos = useState([]), puntos = _puntos[0], setPuntos = _puntos[1];
+  var _distancia = useState(0), distancia = _distancia[0], setDistancia = _distancia[1];
+  var _elapsed = useState(0), elapsed = _elapsed[0], setElapsed = _elapsed[1];
+  var _error = useState(""), error = _error[0], setError = _error[1];
+  var watchRef = useRef(null);
+  var ivRef = useRef(null);
+  var startTimeRef = useRef(null);
+
+  function haversine(lat1, lon1, lat2, lon2) {
+    var R = 6371000;
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  function iniciar() {
+    if (!navigator.geolocation) return setError("Tu dispositivo no soporta GPS");
+    setError("");
+    setPuntos([]);
+    setDistancia(0);
+    setElapsed(0);
+    startTimeRef.current = Date.now();
+    ivRef.current = setInterval(function() {
+      setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
+    }, 1000);
+    watchRef.current = navigator.geolocation.watchPosition(
+      function(pos) {
+        var nuevo = { lat: pos.coords.latitude, lng: pos.coords.longitude, t: Date.now() };
+        setPuntos(function(prev) {
+          if (prev.length > 0) {
+            var ultimo = prev[prev.length - 1];
+            var d = haversine(ultimo.lat, ultimo.lng, nuevo.lat, nuevo.lng);
+            if (d > 3) {
+              setDistancia(function(pd) { return pd + d; });
+              return [...prev, nuevo];
+            }
+            return prev;
+          }
+          return [nuevo];
+        });
+      },
+      function(err) { setError("Error GPS: " + err.message); },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+    );
+    setTracking(true);
+  }
+
+  function detener() {
+    if (watchRef.current) navigator.geolocation.clearWatch(watchRef.current);
+    clearInterval(ivRef.current);
+    setTracking(false);
+  }
+
+  useEffect(function() { return function() { if (watchRef.current) navigator.geolocation.clearWatch(watchRef.current); clearInterval(ivRef.current); }; }, []);
+
+  var km = distancia / 1000;
+  var ritmo = calcRitmo(secsToTime(elapsed), km || 1);
+  var timeStr = secsToTime(elapsed);
+
+  return <div style={{ padding:"16px 20px 40px" }}>
+    <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
+      <span style={{ fontSize:22, cursor:"pointer" }} onClick={props.onBack}>&#8592;</span>
+      <span style={{ fontWeight:700, fontSize:18 }}>Rastreo GPS</span>
+    </div>
+
+    {/* Metricas en vivo */}
+    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10, marginBottom:16 }}>
+      {[
+        { l:"DISTANCIA", v:km.toFixed(2), u:"km", color:C.cyan },
+        { l:"TIEMPO", v:timeStr, u:"", color:C.green },
+        { l:"RITMO", v:ritmo, u:"min/km", color:C.gold },
+      ].map(function(s) {
+        return <div key={s.l} style={{ background:C.card, borderRadius:14, padding:"12px 8px", textAlign:"center", border:"0.5px solid " + C.border }}>
+          <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, fontWeight:700, marginBottom:4 }}>{s.l}</div>
+          <div style={{ fontSize:s.l === "TIEMPO" ? 14 : 20, fontWeight:900, fontFamily:"'JetBrains Mono',monospace", color:s.color }}>{s.v}</div>
+          {s.u && <div style={{ fontSize:9, color:C.muted, marginTop:2 }}>{s.u}</div>}
+        </div>;
+      })}
+    </div>
+
+    {/* Mapa simplificado con puntos */}
+    <div style={{ background:C.card, borderRadius:16, padding:16, marginBottom:16, border:"0.5px solid " + C.border, minHeight:180, display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden" }}>
+      {puntos.length === 0 ? (
+        <div style={{ textAlign:"center" }}>
+          <div style={{ fontSize:32, marginBottom:8 }}>📍</div>
+          <div style={{ fontSize:13, color:C.muted }}>{tracking ? "Esperando senal GPS..." : "Presiona Iniciar para comenzar"}</div>
+        </div>
+      ) : (
+        <div style={{ width:"100%", textAlign:"center" }}>
+          <div style={{ fontSize:13, color:C.green, fontWeight:700, marginBottom:8 }}>📍 {puntos.length} puntos registrados</div>
+          <div style={{ fontSize:11, color:C.muted }}>Lat: {puntos[puntos.length-1].lat.toFixed(5)}</div>
+          <div style={{ fontSize:11, color:C.muted }}>Lng: {puntos[puntos.length-1].lng.toFixed(5)}</div>
+          <div style={{ marginTop:12, display:"flex", justifyContent:"center", gap:4, flexWrap:"wrap" }}>
+            {puntos.slice(-20).map(function(p, i) {
+              return <div key={i} style={{ width:8, height:8, borderRadius:4, background:i === puntos.slice(-20).length - 1 ? C.accent : C.cyan, opacity: 0.4 + (i / puntos.slice(-20).length) * 0.6 }} />;
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+
+    {error && <div style={{ background:"rgba(255,77,106,0.1)", borderRadius:10, padding:12, marginBottom:12, border:"1px solid rgba(255,77,106,0.2)", fontSize:12, color:C.accent }}>{error}</div>}
+
+    {!tracking ? (
+      <button style={{ width:"100%", padding:18, borderRadius:14, background:C.green, color:"#FFF", fontSize:16, fontWeight:800, border:"none", cursor:"pointer" }} onClick={iniciar}>
+        📍 Iniciar rastreo GPS
+      </button>
+    ) : (
+      <button style={{ width:"100%", padding:18, borderRadius:14, background:C.accent, color:"#FFF", fontSize:16, fontWeight:800, border:"none", cursor:"pointer" }} onClick={detener}>
+        ⏹ Detener rastreo
+      </button>
+    )}
+
+    {!tracking && puntos.length > 0 && (
+      <div style={{ marginTop:12, background:"rgba(16,185,129,0.08)", borderRadius:12, padding:14, border:"1px solid rgba(16,185,129,0.15)", textAlign:"center" }}>
+        <div style={{ fontSize:13, fontWeight:700, color:C.green }}>Actividad completada</div>
+        <div style={{ fontSize:12, color:C.muted, marginTop:4 }}>{km.toFixed(2)} km · {timeStr} · Ritmo {ritmo} min/km</div>
+        <button style={{ marginTop:10, padding:"10px 20px", borderRadius:10, background:C.accent, color:"#FFF", fontWeight:700, border:"none", cursor:"pointer", fontSize:13 }} onClick={function() { props.onGuardarActividad({ km: km.toFixed(2), tiempo: timeStr, ritmo: ritmo, puntos: puntos.length }); }}>
+          Guardar actividad
+        </button>
+      </div>
+    )}
+  </div>;
+}
+
 export default function App() {
   var _scr = useState("splash"), scr = _scr[0], setScr = _scr[1];
   var _user = useState(null), user = _user[0], setUser = _user[1];
@@ -68,6 +267,7 @@ export default function App() {
   var _splashDone = useState(false), splashDone = _splashDone[0], setSplashDone = _splashDone[1];
   var _corredores = useState([]), corredores = _corredores[0], setCorredores = _corredores[1];
   var _loadingC = useState(true), loadingC = _loadingC[0], setLoadingC = _loadingC[1];
+  var _msgGuardar = useState(""), msgGuardar = _msgGuardar[0], setMsgGuardar = _msgGuardar[1];
 
   var evtPast = EVENTO.estado === "finalizado";
 
@@ -75,7 +275,12 @@ export default function App() {
     getDocs(collection(db, "usuarios")).then(function(snap) {
       var lista = [];
       snap.forEach(function(d) { lista.push(Object.assign({ id: d.id }, d.data())); });
-      lista.sort(function(a, b) { if (a.tiempo && b.tiempo) return a.tiempo.localeCompare(b.tiempo); return 0; });
+      lista.sort(function(a, b) {
+        if (a.tiempo && b.tiempo) return timeToSecs(a.tiempo) - timeToSecs(b.tiempo);
+        if (a.tiempo) return -1;
+        if (b.tiempo) return 1;
+        return 0;
+      });
       lista = lista.map(function(c, i) { return Object.assign({}, c, { pos: i + 1 }); });
       setCorredores(lista);
       setLoadingC(false);
@@ -92,11 +297,7 @@ export default function App() {
           if (snap.exists()) setUserData(snap.data());
           setLoading(false);
         });
-      } else {
-        setUser(null);
-        setUserData(null);
-        setLoading(false);
-      }
+      } else { setUser(null); setUserData(null); setLoading(false); }
     });
     return function() { unsub(); };
   }, []);
@@ -122,8 +323,41 @@ export default function App() {
   function go(s) { setFade(false); setTimeout(function() { setScr(s); }, 150); }
   function goTab(t) { setFade(false); setTimeout(function() { setTab(t); setScr("app"); }, 100); }
   function getLugaresDisp() { return Math.max(0, EVENTO.cupoMax - corredores.length); }
-  function isTop50(c) { return c.pos > 0 && c.pos <= 50; }
   function ini(n) { return n ? n.split(" ").map(function(x) { return x[0]; }).slice(0, 2).join("") : "?"; }
+
+  // Calcular posicion por rama
+  function getPosRama(corredor) {
+    var rama = corredor.genero;
+    var mismaRama = corredores.filter(function(c) { return c.genero === rama && c.tiempo; }).sort(function(a, b) { return timeToSecs(a.tiempo) - timeToSecs(b.tiempo); });
+    var idx = mismaRama.findIndex(function(c) { return c.id === corredor.id; });
+    return idx >= 0 ? idx + 1 : 0;
+  }
+
+  function isTop10Rama(corredor) {
+    if (!corredor.tiempo) return false;
+    return getPosRama(corredor) <= 10;
+  }
+
+  // Guardar tiempo del corredor
+  function guardarTiempo(tiempo) {
+    if (!user) return;
+    setMsgGuardar("Guardando...");
+    updateDoc(doc(db, "usuarios", user.uid), { tiempo: tiempo }).then(function() {
+      setUserData(function(prev) { return Object.assign({}, prev, { tiempo: tiempo }); });
+      cargarCorredores();
+      setMsgGuardar("");
+      go("certificado");
+    }).catch(function() { setMsgGuardar("Error al guardar"); });
+  }
+
+  function guardarActividad(datos) {
+    if (!user) return;
+    updateDoc(doc(db, "usuarios", user.uid), { ultimaActividad: datos }).then(function() {
+      setUserData(function(prev) { return Object.assign({}, prev, { ultimaActividad: datos }); });
+      setMsgGuardar("Actividad guardada!");
+      setTimeout(function() { setMsgGuardar(""); }, 3000);
+    }).catch(function() {});
+  }
 
   function doReg() {
     setErr("");
@@ -163,13 +397,11 @@ export default function App() {
       });
   }
 
-  function doLogout() {
-    signOut(auth).then(function() { setUser(null); setUserData(null); go("login"); });
-  }
+  function doLogout() { signOut(auth).then(function() { setUser(null); setUserData(null); go("login"); }); }
 
   var filtered = search.trim() ? corredores.filter(function(c) { return c.nombre.toLowerCase().includes(search.toLowerCase()) || String(c.dorsal).includes(search); }) : corredores;
   var leaderboard = corredores.filter(function(c) { return ramaF === "Todas" || c.genero === ramaF; });
-  var miPosicion = userData ? corredores.find(function(c) { return c.correo === userData.correo; }) : null;
+  var miCorredor = userData && corredores.find(function(c) { return c.correo === userData.correo; });
 
   function W(content) {
     return <div style={{ maxWidth:430, margin:"0 auto", minHeight:"100vh", background:C.bg, fontFamily:"'Outfit','SF Pro Display',system-ui,sans-serif", color:"#FFF", position:"relative", overflow:"hidden" }}>
@@ -178,6 +410,7 @@ export default function App() {
     </div>;
   }
 
+  // SPLASH
   if (scr === "splash") return W(
     <div style={{ display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center", height:"100vh" }}>
       <div style={{ position:"absolute", top:"15%", right:"-10%", width:200, height:200, borderRadius:"50%", background:"radial-gradient(circle, rgba(255,77,106,0.15), transparent 70%)" }} />
@@ -190,6 +423,7 @@ export default function App() {
     </div>
   );
 
+  // LOGIN
   if (scr === "login") return W(
     <div style={{ padding:"60px 24px 40px" }}>
       <div style={{ textAlign:"center", marginBottom:36 }}>
@@ -210,6 +444,7 @@ export default function App() {
     </div>
   );
 
+  // REGISTER
   if (scr === "register") return W(
     <div style={{ padding:"36px 24px 40px", maxHeight:"100vh", overflowY:"auto" }}>
       <div style={{ marginBottom:20 }}>
@@ -250,6 +485,7 @@ export default function App() {
     </div>
   );
 
+  // WELCOME
   if (scr === "welcome" && userData) return W(
     <div style={{ display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center", minHeight:"100vh", padding:24, textAlign:"center" }}>
       <div style={{ fontSize:64, marginBottom:16 }}>🎉</div>
@@ -260,21 +496,145 @@ export default function App() {
         <div style={{ fontSize:68, fontWeight:900, fontFamily:"'JetBrains Mono',monospace", letterSpacing:-3 }}>#{userData.dorsal}</div>
         <p style={{ color:C.muted, fontSize:13, marginTop:10, lineHeight:1.5 }}>Dorsal asignado para Codigo 26 - 5K<br />Ciclopista Rio Mayo, Cuernavaca, Morelos</p>
       </div>
-      <div style={{ background:C.card, borderRadius:14, padding:16, width:"100%", marginTop:16, border:"0.5px solid " + C.border }}>
-        <div style={{ fontSize:10, color:C.muted, letterSpacing:2 }}>REGISTRADO COMO</div>
-        <div style={{ fontSize:17, fontWeight:700, marginTop:4 }}>{userData.nombre}</div>
-        <div style={{ fontSize:12, color:C.muted, marginTop:2 }}>Categoria: {userData.genero}</div>
-      </div>
       <button style={Object.assign({}, btnP, { marginTop:24, width:"100%" })} onClick={function() { setTab("home"); go("app"); }}>Entrar a la app</button>
     </div>
   );
 
+  // CERTIFICADO
+  if (scr === "certificado" && userData) {
+    var c = miCorredor || userData;
+    var posRama = miCorredor ? getPosRama(miCorredor) : 0;
+    var posGen = miCorredor ? miCorredor.pos : 0;
+    var ritmoC = calcRitmo(c.tiempo, 5);
+    return W(
+      <div style={{ padding:"16px 20px 40px" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
+          <span style={{ fontSize:22, cursor:"pointer" }} onClick={function() { go("app"); }}>&#8592;</span>
+          <span style={{ fontWeight:700, fontSize:18 }}>Certificado de finisher</span>
+        </div>
+        {/* Certificado */}
+        <div style={{ background:"#FFFFF8", borderRadius:20, padding:28, textAlign:"center", position:"relative", overflow:"hidden", marginBottom:20, border:"2px solid #D4A020" }}>
+          <div style={{ position:"absolute", top:10, left:10, width:28, height:28, borderTop:"2px solid #D4A020", borderLeft:"2px solid #D4A020", borderTopLeftRadius:4 }} />
+          <div style={{ position:"absolute", top:10, right:10, width:28, height:28, borderTop:"2px solid #D4A020", borderRight:"2px solid #D4A020", borderTopRightRadius:4 }} />
+          <div style={{ position:"absolute", bottom:10, left:10, width:28, height:28, borderBottom:"2px solid #D4A020", borderLeft:"2px solid #D4A020", borderBottomLeftRadius:4 }} />
+          <div style={{ position:"absolute", bottom:10, right:10, width:28, height:28, borderBottom:"2px solid #D4A020", borderRight:"2px solid #D4A020", borderBottomRightRadius:4 }} />
+          <div style={{ fontSize:28, marginBottom:6 }}>🏅</div>
+          <div style={{ fontSize:11, fontWeight:800, color:"#D4A020", letterSpacing:4, marginBottom:6 }}>CERTIFICADO OFICIAL</div>
+          <div style={{ width:60, height:1.5, background:"#D4A020", margin:"10px auto" }} />
+          <div style={{ fontSize:9, color:"#8A8078", letterSpacing:3, marginBottom:6 }}>CERTIFICA QUE</div>
+          <div style={{ fontSize:22, fontWeight:900, color:"#1A1208", marginBottom:4 }}>{c.nombre}</div>
+          <div style={{ fontSize:13, fontWeight:700, color:"#5A4A30" }}>Dorsal #{c.dorsal} · {c.genero}</div>
+          <div style={{ width:50, height:1, background:"#E0D8C8", margin:"12px auto" }} />
+          <div style={{ fontSize:13, fontWeight:700, color:"#3A2E1E", marginBottom:4 }}>Completo exitosamente</div>
+          <div style={{ fontSize:16, fontWeight:900, color:"#1A1208" }}>Rumbo al Mundial · Codigo 26</div>
+          <div style={{ fontSize:13, color:"#8A8078", marginTop:4 }}>5K · Ciclopista Rio Mayo, Cuernavaca</div>
+          <div style={{ display:"flex", justifyContent:"center", gap:20, margin:"16px 0 8px" }}>
+            {[
+              { l:"TIEMPO", v: c.tiempo || "--:--:--" },
+              { l:"POSICION", v: posGen > 0 ? "#" + posGen : "-" },
+              { l:"RITMO", v: ritmoC + " min/km" },
+            ].map(function(s) {
+              return <div key={s.l}>
+                <div style={{ fontSize:8, fontWeight:700, color:"#8A8078", letterSpacing:2, marginBottom:3 }}>{s.l}</div>
+                <div style={{ fontSize:16, fontWeight:900, color:"#1A1208", fontFamily:"'JetBrains Mono',monospace" }}>{s.v}</div>
+              </div>;
+            })}
+          </div>
+          <div style={{ width:60, height:1, background:"#D4A020", margin:"10px auto" }} />
+          <div style={{ fontSize:10, color:"#8A8078" }}>Cuernavaca, Morelos · 3 de mayo de 2026</div>
+          <div style={{ fontSize:9, color:"#B0A898", marginTop:8 }}>Folio: COD26-5K-{String(c.dorsal || "000").padStart(4, "0")}</div>
+          {isTop10Rama(miCorredor || {}) && (
+            <div style={{ marginTop:10, background:"rgba(245,166,35,0.15)", borderRadius:8, padding:"6px 12px", display:"inline-block" }}>
+              <span style={{ fontSize:11, fontWeight:700, color:"#D4A020" }}>🏆 Top 10 {c.genero} · Recompensas desbloqueadas</span>
+            </div>
+          )}
+        </div>
+        {isTop10Rama(miCorredor || {}) && (
+          <button style={Object.assign({}, btnP, { marginBottom:10 })} onClick={function() { go("rewards"); }}>🎁 Ver mis recompensas Top 10</button>
+        )}
+        <button style={btnS} onClick={function() { go("app"); }}>Volver al inicio</button>
+      </div>
+    );
+  }
+
+  // CRONOMETRO / REGISTRAR TIEMPO
+  if (scr === "cronometro") return W(
+    <div style={{ padding:"16px 20px 40px" }}>
+      <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
+        <span style={{ fontSize:22, cursor:"pointer" }} onClick={function() { go("app"); }}>&#8592;</span>
+        <span style={{ fontWeight:700, fontSize:18 }}>Registrar mi tiempo</span>
+      </div>
+      <div style={{ background:"rgba(0,212,255,0.05)", borderRadius:14, padding:14, marginBottom:16, border:"1px solid rgba(0,212,255,0.1)" }}>
+        <div style={{ fontSize:12, color:C.cyan, fontWeight:600 }}>Instrucciones</div>
+        <div style={{ fontSize:12, color:C.muted, marginTop:4, lineHeight:1.6 }}>1. Presiona Iniciar al cruzar la linea de salida{"\n"}2. Presiona Pausar al cruzar la meta{"\n"}3. Presiona Registrar para guardar tu tiempo oficial</div>
+      </div>
+      {msgGuardar ? (
+        <div style={{ textAlign:"center", padding:20, fontSize:14, color:C.green, fontWeight:700 }}>{msgGuardar}</div>
+      ) : (
+        <Cronometro onGuardar={guardarTiempo} />
+      )}
+      {userData && userData.tiempo && (
+        <div style={{ background:"rgba(16,185,129,0.08)", borderRadius:12, padding:14, border:"1px solid rgba(16,185,129,0.15)", textAlign:"center", marginTop:8 }}>
+          <div style={{ fontSize:12, color:C.muted }}>Tu tiempo actual registrado</div>
+          <div style={{ fontSize:24, fontWeight:900, fontFamily:"'JetBrains Mono',monospace", color:C.green, marginTop:4 }}>{userData.tiempo}</div>
+          <button style={{ marginTop:10, padding:"8px 20px", borderRadius:10, background:"rgba(255,255,255,0.06)", color:"#FFF", fontWeight:600, border:"1px solid rgba(255,255,255,0.1)", cursor:"pointer", fontSize:13 }} onClick={function() { go("certificado"); }}>Ver mi certificado</button>
+        </div>
+      )}
+    </div>
+  );
+
+  // GPS RASTREO
+  if (scr === "gps") return W(
+    <RastreoGPS onBack={function() { go("app"); }} onGuardarActividad={function(datos) { guardarActividad(datos); go("app"); }} />
+  );
+
+  // REWARDS
+  if (scr === "rewards") return W(
+    <div style={{ padding:"16px 20px 40px" }}>
+      <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
+        <span style={{ fontSize:22, cursor:"pointer" }} onClick={function() { go("app"); }}>&#8592;</span>
+        <span style={{ fontWeight:700 }}>Zona de Recompensas</span>
+      </div>
+      <div style={{ background:"linear-gradient(135deg, rgba(245,166,35,0.1), rgba(245,166,35,0.03))", borderRadius:20, padding:22, textAlign:"center", marginBottom:20, border:"1px solid rgba(245,166,35,0.2)" }}>
+        <div style={{ fontSize:40, marginBottom:8 }}>🏆</div>
+        <div style={{ fontSize:18, fontWeight:900 }}>Recompensas Top 10</div>
+        <div style={{ fontSize:13, color:C.muted, marginTop:8 }}>Cupones exclusivos para los primeros 10 de cada rama (Varonil y Femenil)</div>
+      </div>
+      {miCorredor && isTop10Rama(miCorredor) ? (
+        <div style={{ background:"rgba(16,185,129,0.08)", borderRadius:14, padding:16, marginBottom:20, border:"1px solid rgba(16,185,129,0.2)", textAlign:"center" }}>
+          <div style={{ fontSize:14, fontWeight:700, color:C.green }}>🎉 Estas en Top 10 {miCorredor.genero} · Posicion #{getPosRama(miCorredor)}</div>
+          <div style={{ fontSize:12, color:C.muted, marginTop:4 }}>Tienes acceso a los siguientes cupones</div>
+        </div>
+      ) : (
+        <div style={{ background:"rgba(107,113,148,0.08)", borderRadius:14, padding:16, marginBottom:20, border:"1px solid rgba(107,113,148,0.2)", textAlign:"center" }}>
+          <div style={{ fontSize:13, color:C.muted }}>Los cupones se desbloquean para los primeros 10 de cada rama al finalizar el evento</div>
+        </div>
+      )}
+      {CUPONES.map(function(cup) {
+        return <div key={cup.id} style={{ background:C.card, borderRadius:16, padding:18, marginBottom:12, border:"0.5px solid " + C.border }}>
+          <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+            <div style={{ width:50, height:50, borderRadius:14, background:cup.color + "18", display:"flex", alignItems:"center", justifyContent:"center", fontSize:24, flexShrink:0 }}>{cup.icono}</div>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:14, fontWeight:700 }}>{cup.titulo}</div>
+              <div style={{ fontSize:12, color:C.muted, marginTop:2 }}>{cup.desc}</div>
+              <div style={{ marginTop:8 }}><span style={{ background:"rgba(245,166,35,0.1)", color:C.gold, fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:20 }}>Proximamente</span></div>
+            </div>
+          </div>
+        </div>;
+      })}
+    </div>
+  );
+
+  // MAP
   if (scr === "map") return W(
     <div style={{ padding:"16px 20px 40px" }}>
-      <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}><span style={{ fontSize:22, cursor:"pointer" }} onClick={function() { go("app"); }}>&#8592;</span><span style={{ fontWeight:700 }}>Mapa de la ruta</span></div>
+      <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
+        <span style={{ fontSize:22, cursor:"pointer" }} onClick={function() { go("app"); }}>&#8592;</span>
+        <span style={{ fontWeight:700 }}>Mapa de la ruta</span>
+      </div>
       <div style={{ background:C.card, borderRadius:18, padding:20, border:"0.5px solid " + C.border, marginBottom:16 }}>
         <div style={{ fontSize:16, fontWeight:800, marginBottom:4 }}>Rumbo al Mundial Codigo 26</div>
-        <div style={{ fontSize:13, color:C.muted }}>5K - Ciclopista Rio Mayo, Cuernavaca, Morelos</div>
+        <div style={{ fontSize:13, color:C.muted }}>5K · Ciclopista Rio Mayo, Cuernavaca, Morelos</div>
       </div>
       <div style={{ position:"relative", paddingLeft:28 }}>
         {EVENTO.ruta.map(function(p, i) {
@@ -296,39 +656,7 @@ export default function App() {
     </div>
   );
 
-  if (scr === "rewards") return W(
-    <div style={{ padding:"16px 20px 40px" }}>
-      <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}><span style={{ fontSize:22, cursor:"pointer" }} onClick={function() { go("app"); }}>&#8592;</span><span style={{ fontWeight:700 }}>Zona de Recompensas</span></div>
-      <div style={{ background:"linear-gradient(135deg, rgba(245,166,35,0.1), rgba(245,166,35,0.03))", borderRadius:20, padding:22, textAlign:"center", marginBottom:20, border:"1px solid rgba(245,166,35,0.2)" }}>
-        <div style={{ fontSize:40, marginBottom:8 }}>🏆</div>
-        <div style={{ fontSize:18, fontWeight:900 }}>Recompensas Top 50</div>
-        <div style={{ fontSize:13, color:C.muted, marginTop:8 }}>Cupones exclusivos para los primeros 50 finalistas</div>
-      </div>
-      {miPosicion && isTop50(miPosicion) ? (
-        <div style={{ background:"rgba(16,185,129,0.08)", borderRadius:14, padding:16, marginBottom:20, border:"1px solid rgba(16,185,129,0.2)", textAlign:"center" }}>
-          <div style={{ fontSize:14, fontWeight:700, color:C.green }}>🎉 Estas en el Top 50 - Posicion #{miPosicion.pos}</div>
-          <div style={{ fontSize:12, color:C.muted, marginTop:4 }}>Tienes acceso a los siguientes cupones</div>
-        </div>
-      ) : (
-        <div style={{ background:"rgba(107,113,148,0.08)", borderRadius:14, padding:16, marginBottom:20, border:"1px solid rgba(107,113,148,0.2)", textAlign:"center" }}>
-          <div style={{ fontSize:13, color:C.muted }}>Los cupones se desbloquean al finalizar el evento para los primeros 50 lugares</div>
-        </div>
-      )}
-      {CUPONES.map(function(cup) {
-        return <div key={cup.id} style={{ background:C.card, borderRadius:16, padding:18, marginBottom:12, border:"0.5px solid " + C.border }}>
-          <div style={{ display:"flex", alignItems:"center", gap:14 }}>
-            <div style={{ width:50, height:50, borderRadius:14, background:cup.color + "18", display:"flex", alignItems:"center", justifyContent:"center", fontSize:24, flexShrink:0 }}>{cup.icono}</div>
-            <div style={{ flex:1 }}>
-              <div style={{ fontSize:14, fontWeight:700 }}>{cup.titulo}</div>
-              <div style={{ fontSize:12, color:C.muted, marginTop:2 }}>{cup.desc}</div>
-              <div style={{ marginTop:8 }}><span style={{ background:"rgba(245,166,35,0.1)", color:C.gold, fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:20 }}>Proximamente</span></div>
-            </div>
-          </div>
-        </div>;
-      })}
-    </div>
-  );
-
+  // MAIN APP
   if (scr === "app" && userData) return W(
     <div style={{ paddingBottom:90 }}>
       {tab === "home" && <div style={{ padding:20 }}>
@@ -336,24 +664,43 @@ export default function App() {
           <div><div style={{ fontSize:20, fontWeight:800 }}>Hola, {userData.nombre.split(" ")[0]}</div><div style={{ fontSize:13, color:C.muted }}>COD Meta 26</div></div>
           <div style={{ background:"rgba(255,77,106,0.1)", borderRadius:12, padding:"8px 12px", textAlign:"center", border:"1px solid rgba(255,77,106,0.2)" }}><div style={{ fontSize:8, fontWeight:700, color:C.accent, letterSpacing:2 }}>DORSAL</div><div style={{ fontSize:20, fontWeight:900, fontFamily:"'JetBrains Mono',monospace" }}>#{userData.dorsal}</div></div>
         </div>
+
+        {/* Banner evento */}
         <div style={{ background:"linear-gradient(135deg," + C.card + "," + C.cardL + ")", borderRadius:20, padding:20, marginBottom:16, border:"0.5px solid " + C.border }}>
           <div style={{ fontSize:10, fontWeight:700, color:evtPast ? C.green : C.gold, letterSpacing:2, marginBottom:8 }}>{evtPast ? "EVENTO FINALIZADO" : "PROXIMO EVENTO"}</div>
           <div style={{ fontSize:20, fontWeight:900, marginBottom:4 }}>Rumbo al Mundial</div>
           <div style={{ fontSize:20, fontWeight:900, color:C.accent, marginBottom:12 }}>Codigo 26</div>
           <div style={{ display:"flex", flexDirection:"column", gap:4, marginBottom:12 }}>
-            <span style={{ fontSize:12, color:C.muted }}>📅 3 de mayo 2026 - 7:00 AM</span>
+            <span style={{ fontSize:12, color:C.muted }}>📅 3 de mayo 2026 · 7:00 AM</span>
             <span style={{ fontSize:12, color:C.muted }}>📍 Ciclopista Rio Mayo, Cuernavaca</span>
             <span style={{ fontSize:12, color:C.muted }}>🏃 {corredores.length} inscritos de {EVENTO.cupoMax}</span>
-            <span style={{ fontSize:12, color:C.muted }}>🏁 Salida/Meta: City Market (Juan Pablo II)</span>
           </div>
           <div style={{ display:"flex", gap:8 }}>{["5K", "Varonil", "Femenil"].map(function(d, i) { return <span key={d} style={{ background:(i === 0 ? C.accent : C.cyan) + "15", padding:"5px 12px", borderRadius:20, fontSize:12, fontWeight:700, color:i === 0 ? C.accent : C.cyan }}>{d}</span>; })}</div>
         </div>
+
         <div style={{ marginBottom:16 }}><Countdown target={EVENTO.fechaObj} /></div>
+
+        {/* Mi resultado si ya tiene tiempo */}
+        {userData.tiempo && (
+          <div style={{ background:"rgba(16,185,129,0.08)", borderRadius:16, padding:16, marginBottom:16, border:"1px solid rgba(16,185,129,0.15)" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <div>
+                <div style={{ fontSize:11, color:C.muted, letterSpacing:2 }}>MI TIEMPO OFICIAL</div>
+                <div style={{ fontSize:28, fontWeight:900, fontFamily:"'JetBrains Mono',monospace", color:C.green }}>{userData.tiempo}</div>
+                {miCorredor && <div style={{ fontSize:12, color:C.muted, marginTop:2 }}>Posicion #{miCorredor.pos} general</div>}
+              </div>
+              <button style={{ padding:"10px 16px", borderRadius:12, background:C.accent, color:"#FFF", fontWeight:700, border:"none", cursor:"pointer", fontSize:13 }} onClick={function() { go("certificado"); }}>Ver certificado</button>
+            </div>
+          </div>
+        )}
+
+        {/* Acciones rapidas */}
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
           <button style={Object.assign({}, btnS, { margin:0 })} onClick={function() { go("map"); }}>🗺️ Ruta</button>
           <button style={Object.assign({}, btnS, { margin:0 })} onClick={function() { goTab("leaderboard"); }}>🏆 Rankings</button>
-          <button style={Object.assign({}, btnS, { margin:0 })} onClick={function() { go("rewards"); }}>🎁 Recompensas</button>
-          <button style={Object.assign({}, btnS, { margin:0 })} onClick={function() { goTab("search"); }}>🔍 Buscar</button>
+          <button style={Object.assign({}, btnS, { margin:0 })} onClick={function() { go("cronometro"); }}>⏱️ Mi tiempo</button>
+          <button style={Object.assign({}, btnS, { margin:0 })} onClick={function() { go("gps"); }}>📍 Rastreo GPS</button>
+          <button style={Object.assign({}, btnS, { margin:0, gridColumn:"span 2" })} onClick={function() { go("rewards"); }}>🎁 Recompensas Top 10</button>
         </div>
       </div>}
 
@@ -379,9 +726,9 @@ export default function App() {
                 <div style={{ width:44, height:44, borderRadius:12, background:"rgba(0,212,255,0.1)", border:"1px solid rgba(0,212,255,0.2)", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, color:C.cyan, fontSize:13, flexShrink:0, marginRight:12 }}>{c.dorsal}</div>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ fontSize:15, fontWeight:700, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{c.nombre}</div>
-                  <div style={{ fontSize:12, color:C.muted }}>{c.genero} · Inscrito {c.fechaReg}</div>
+                  <div style={{ fontSize:12, color:C.muted }}>{c.genero} · {c.fechaReg}</div>
                 </div>
-                {c.tiempo ? <div style={{ fontSize:14, fontWeight:800, fontFamily:"'JetBrains Mono',monospace" }}>{c.tiempo}</div> : <div style={{ fontSize:11, color:C.muted }}>Pendiente</div>}
+                {c.tiempo ? <div style={{ fontSize:14, fontWeight:800, fontFamily:"'JetBrains Mono',monospace", color:C.green }}>{c.tiempo}</div> : <div style={{ fontSize:11, color:C.muted }}>Sin tiempo</div>}
               </div>;
             })}
           </>
@@ -389,7 +736,7 @@ export default function App() {
       </div>}
 
       {tab === "leaderboard" && <div style={{ padding:16 }}>
-        <div style={{ fontSize:16, fontWeight:700, marginBottom:12 }}>Ranking - Codigo 26</div>
+        <div style={{ fontSize:16, fontWeight:700, marginBottom:12 }}>Ranking · Codigo 26</div>
         <div style={{ display:"flex", gap:8, marginBottom:14 }}>{["Todas", "Varonil", "Femenil"].map(function(r) { return <span key={r} onClick={function() { setRamaF(r); }} style={{ padding:"8px 18px", borderRadius:20, fontSize:13, fontWeight:600, cursor:"pointer", background:ramaF === r ? C.accent : C.card, color:ramaF === r ? "#FFF" : C.muted, border:"1px solid " + (ramaF === r ? C.accent : C.border) }}>{r}</span>; })}</div>
         {loadingC ? (
           <div style={{ textAlign:"center", padding:40, color:C.muted }}>Cargando ranking...</div>
@@ -397,7 +744,7 @@ export default function App() {
           <div style={{ textAlign:"center", padding:40 }}>
             <div style={{ fontSize:40, marginBottom:12 }}>🏆</div>
             <div style={{ fontSize:16, fontWeight:700, marginBottom:8 }}>Ranking vacio</div>
-            <div style={{ fontSize:13, color:C.muted }}>Los resultados apareceran aqui cuando el evento finalice</div>
+            <div style={{ fontSize:13, color:C.muted }}>Los resultados apareceran aqui cuando los corredores registren sus tiempos</div>
           </div>
         ) : (
           leaderboard.map(function(c, i) {
@@ -406,9 +753,9 @@ export default function App() {
               <div style={{ width:44, height:44, borderRadius:12, background:"rgba(255,77,106,0.08)", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:emo ? 22 : 15, flexShrink:0, marginRight:12 }}>{emo || "#" + (i + 1)}</div>
               <div style={{ flex:1 }}>
                 <div style={{ fontSize:15, fontWeight:700 }}>{c.nombre}</div>
-                <div style={{ fontSize:12, color:C.muted }}>Dorsal #{c.dorsal} · {c.genero}</div>
+                <div style={{ fontSize:12, color:C.muted }}>#{c.dorsal} · {c.genero}</div>
               </div>
-              {c.tiempo ? <div style={{ fontSize:14, fontWeight:800, fontFamily:"'JetBrains Mono',monospace" }}>{c.tiempo}</div> : <div style={{ fontSize:11, color:C.muted }}>Sin tiempo</div>}
+              {c.tiempo ? <div style={{ fontSize:14, fontWeight:800, fontFamily:"'JetBrains Mono',monospace", color:C.green }}>{c.tiempo}</div> : <div style={{ fontSize:11, color:C.muted }}>Sin tiempo</div>}
             </div>;
           })
         )}
@@ -421,20 +768,26 @@ export default function App() {
           <div style={{ fontSize:14, color:C.muted, marginTop:4 }}>{userData.correo}</div>
         </div>
         <div style={{ background:"rgba(255,77,106,0.08)", borderRadius:18, padding:24, textAlign:"center", marginBottom:16, border:"1px solid rgba(255,77,106,0.15)" }}>
-          <div style={{ fontSize:10, fontWeight:700, color:C.accent, letterSpacing:3, marginBottom:8 }}>MI DORSAL - CODIGO 26</div>
+          <div style={{ fontSize:10, fontWeight:700, color:C.accent, letterSpacing:3, marginBottom:8 }}>MI DORSAL · CODIGO 26</div>
           <div style={{ fontSize:48, fontWeight:900, fontFamily:"'JetBrains Mono',monospace" }}>#{userData.dorsal}</div>
           <div style={{ fontSize:12, color:C.muted, marginTop:6 }}>5K · Ciclopista Rio Mayo, Cuernavaca</div>
         </div>
-        {miPosicion && miPosicion.tiempo && (
-          <div style={{ background:"rgba(0,212,255,0.08)", borderRadius:14, padding:16, marginBottom:16, border:"1px solid rgba(0,212,255,0.15)", textAlign:"center" }}>
-            <div style={{ fontSize:11, color:C.muted, letterSpacing:2 }}>MI RESULTADO</div>
-            <div style={{ fontSize:32, fontWeight:900, fontFamily:"'JetBrains Mono',monospace", color:C.cyan, marginTop:4 }}>{miPosicion.tiempo}</div>
-            <div style={{ fontSize:13, color:C.muted, marginTop:4 }}>Posicion #{miPosicion.pos} general</div>
-            {isTop50(miPosicion) && <div style={{ fontSize:12, fontWeight:700, color:C.gold, marginTop:6 }}>🏆 Top 50 - Tienes recompensas!</div>}
+        {userData.tiempo && (
+          <div style={{ background:"rgba(16,185,129,0.08)", borderRadius:14, padding:16, marginBottom:16, border:"1px solid rgba(16,185,129,0.15)", textAlign:"center" }}>
+            <div style={{ fontSize:11, color:C.muted, letterSpacing:2 }}>MI TIEMPO OFICIAL</div>
+            <div style={{ fontSize:32, fontWeight:900, fontFamily:"'JetBrains Mono',monospace", color:C.green, marginTop:4 }}>{userData.tiempo}</div>
+            {miCorredor && <div style={{ fontSize:13, color:C.muted, marginTop:4 }}>Posicion #{miCorredor.pos} general · #{getPosRama(miCorredor)} {userData.genero}</div>}
+            {miCorredor && isTop10Rama(miCorredor) && <div style={{ fontSize:12, fontWeight:700, color:C.gold, marginTop:6 }}>🏆 Top 10 {userData.genero} · Tienes recompensas!</div>}
+            <button style={{ marginTop:10, padding:"8px 20px", borderRadius:10, background:C.accent, color:"#FFF", fontWeight:700, border:"none", cursor:"pointer", fontSize:13 }} onClick={function() { go("certificado"); }}>Ver mi certificado</button>
+          </div>
+        )}
+        {userData.ultimaActividad && (
+          <div style={{ background:"rgba(0,212,255,0.06)", borderRadius:14, padding:16, marginBottom:16, border:"1px solid rgba(0,212,255,0.15)" }}>
+            <div style={{ fontSize:12, fontWeight:700, color:C.cyan, marginBottom:6 }}>Ultima actividad GPS</div>
+            <div style={{ fontSize:12, color:C.muted }}>{userData.ultimaActividad.km} km · {userData.ultimaActividad.tiempo} · Ritmo {userData.ultimaActividad.ritmo} min/km</div>
           </div>
         )}
         <div style={{ background:C.card, borderRadius:16, padding:18, marginBottom:12 }}>
-          <div style={{ fontSize:14, fontWeight:700, marginBottom:14 }}>Datos de la cuenta</div>
           {[["Nombre", userData.nombre], ["Correo", userData.correo], ["Dorsal", "#" + userData.dorsal], ["Genero", userData.genero || "-"], ["Telefono", userData.telefono || "-"], ["Talla", userData.talla || "-"], ["Registrado", userData.fechaReg || "-"]].map(function(row) {
             return <div key={row[0]} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:"0.5px solid " + C.border }}>
               <span style={{ fontSize:13, color:C.muted }}>{row[0]}</span>
@@ -442,8 +795,12 @@ export default function App() {
             </div>;
           })}
         </div>
-        <button style={Object.assign({}, btnS, { marginBottom:10 })} onClick={function() { go("rewards"); }}>🎁 Ver recompensas</button>
-        <button style={{ width:"100%", padding:16, borderRadius:14, background:"rgba(255,77,106,0.04)", border:"1px solid rgba(255,77,106,0.2)", color:C.accent, fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }} onClick={doLogout}>Cerrar sesion</button>
+        <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+          <button style={btnS} onClick={function() { go("rewards"); }}>🎁 Recompensas Top 10</button>
+          <button style={btnS} onClick={function() { go("cronometro"); }}>⏱️ Registrar mi tiempo</button>
+          <button style={btnS} onClick={function() { go("gps"); }}>📍 Rastreo GPS</button>
+          <button style={{ width:"100%", padding:16, borderRadius:14, background:"rgba(255,77,106,0.04)", border:"1px solid rgba(255,77,106,0.2)", color:C.accent, fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }} onClick={doLogout}>Cerrar sesion</button>
+        </div>
       </div>}
 
       <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:430, background:C.bg, borderTop:"0.5px solid " + C.border, display:"flex", justifyContent:"space-around", padding:"10px 0 24px", zIndex:100 }}>
