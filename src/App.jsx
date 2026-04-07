@@ -1,32 +1,14 @@
 import { useState, useEffect, useRef } from "react";
-import { auth, db, storage } from "./firebase.js";
+import { auth, db } from "./firebase.js";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
 import { doc, setDoc, getDoc, collection, getDocs, updateDoc, runTransaction } from "firebase/firestore";
-import { ref, uploadBytesResumable, getDownloadURL, listAll } from "firebase/storage";
-
-// ─────────────────────────────────────────────
-//  PASOS PARA ACTIVAR LA GALERÍA:
-//
-//  1. En firebase.js agrega estas dos líneas:
-//       import { getStorage } from "firebase/storage";
-//       export const storage = getStorage(app);
-//
-//  2. En Firebase Console → Storage → Rules, pon:
-//       rules_version = '2';
-//       service firebase.storage {
-//         match /b/{bucket}/o {
-//           match /eventos/{evtId}/galeria/{file} {
-//             allow read: if request.auth != null;
-//             allow write: if request.auth.token.uid == "TU_UID_ADMIN";
-//           }
-//         }
-//       }
-//
-//  3. Reemplaza TU_UID_ADMIN con tu UID real de Firebase Auth
-// ─────────────────────────────────────────────
 
 // ← PON AQUÍ TU UID DE FIREBASE (lo ves en Firebase Console → Authentication → tu usuario)
 var ADMIN_UID = "TU_UID_ADMIN_AQUI";
+
+// ── CLOUDINARY CONFIG ──
+var CLOUD_NAME = "dss3d591u";
+var UPLOAD_PRESET = "código26_subir";
 
 var EVENTO = {
   id: "codigo26",
@@ -113,15 +95,13 @@ function Countdown({ target }) {
 }
 
 // ══════════════════════════════════════════════
-//  📸 GALERÍA — nueva pantalla
+//  📸 GALERÍA — usa Cloudinary (gratis)
 // ══════════════════════════════════════════════
 function Galeria({ onBack, isAdmin }) {
   var [fotos, setFotos] = useState([]);
   var [loading, setLoading] = useState(true);
   var [uploading, setUploading] = useState(false);
   var [progreso, setProgreso] = useState(0);
-  var [subidas, setSubidas] = useState(0);
-  var [totalSubir, setTotalSubir] = useState(0);
   var [fotoAmpliada, setFotoAmpliada] = useState(null);
   var [descargando, setDescargando] = useState(false);
   var fileRef = useRef(null);
@@ -130,16 +110,16 @@ function Galeria({ onBack, isAdmin }) {
 
   function cargarFotos() {
     setLoading(true);
-    listAll(ref(storage, "eventos/codigo26/galeria"))
-      .then(function(res) {
-        var promesas = res.items.map(function(item) {
-          return getDownloadURL(item).then(function(url) {
-            return { url: url, nombre: item.name, path: item.fullPath };
-          });
+    fetch("https://res.cloudinary.com/" + CLOUD_NAME + "/image/list/codigo26.json")
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var lista = (data.resources || []).map(function(r) {
+          return {
+            url: "https://res.cloudinary.com/" + CLOUD_NAME + "/image/upload/" + r.public_id,
+            nombre: r.public_id,
+            path: r.public_id,
+          };
         });
-        return Promise.all(promesas);
-      })
-      .then(function(lista) {
         lista.sort(function(a, b) { return b.nombre.localeCompare(a.nombre); });
         setFotos(lista);
         setLoading(false);
@@ -151,30 +131,27 @@ function Galeria({ onBack, isAdmin }) {
     var archivos = Array.from(e.target.files);
     if (!archivos.length) return;
     setUploading(true);
-    setSubidas(0);
     setProgreso(0);
-    setTotalSubir(archivos.length);
     var completados = 0;
 
     archivos.forEach(function(archivo) {
-      var ext = archivo.name.split(".").pop();
-      var nombre = Date.now() + "_" + Math.random().toString(36).slice(2, 6) + "." + ext;
-      var storageRef = ref(storage, "eventos/codigo26/galeria/" + nombre);
-      var task = uploadBytesResumable(storageRef, archivo);
-      task.on("state_changed", null,
-        function() {
+      var fd = new FormData();
+      fd.append("file", archivo);
+      fd.append("upload_preset", UPLOAD_PRESET);
+      fd.append("tags", "codigo26");
+      fetch("https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/image/upload", {
+        method: "POST", body: fd,
+      })
+        .then(function(r) { return r.json(); })
+        .then(function() {
           completados++;
-          setSubidas(completados);
           setProgreso(Math.round((completados / archivos.length) * 100));
           if (completados === archivos.length) { setUploading(false); cargarFotos(); e.target.value = ""; }
-        },
-        function() {
+        })
+        .catch(function() {
           completados++;
-          setSubidas(completados);
-          setProgreso(Math.round((completados / archivos.length) * 100));
-          if (completados === archivos.length) { setUploading(false); cargarFotos(); e.target.value = ""; }
-        }
-      );
+          if (completados === archivos.length) { setUploading(false); cargarFotos(); }
+        });
     });
   }
 
@@ -185,7 +162,7 @@ function Galeria({ onBack, isAdmin }) {
       .then(function(blob) {
         var url = URL.createObjectURL(blob);
         var a = document.createElement("a");
-        a.href = url; a.download = "Codigo26_" + foto.nombre;
+        a.href = url; a.download = "Codigo26_" + foto.nombre + ".jpg";
         document.body.appendChild(a); a.click();
         document.body.removeChild(a); URL.revokeObjectURL(url);
         setDescargando(false);
@@ -197,53 +174,46 @@ function Galeria({ onBack, isAdmin }) {
 
   return (
     <div style={{ paddingBottom: 40 }}>
-
-      {/* Header */}
       <div style={{ padding: "52px 24px 20px", display: "flex", alignItems: "center", gap: 12 }}>
         <div style={styles.backBtn} onClick={onBack}>←</div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 20, fontWeight: 800 }}>Galería del evento</div>
           <div style={{ fontSize: 12, color: C.mutedLight, marginTop: 2 }}>Codigo 26 · {fotos.length} foto{fotos.length !== 1 ? "s" : ""}</div>
         </div>
-        {/* Botón subir — solo visible para el admin */}
         {isAdmin && (
           <button
             style={{ background: C.accent, border: "none", borderRadius: 12, padding: "10px 18px", color: "#FFF", fontWeight: 700, fontSize: 13, cursor: uploading ? "not-allowed" : "pointer", fontFamily: "inherit", opacity: uploading ? 0.5 : 1 }}
-            onClick={function() { if (!uploading) fileRef.current && fileRef.current.click(); }}
-          >+ Subir</button>
+            onClick={function() { if (!uploading) fileRef.current && fileRef.current.click(); }}>
+            + Subir
+          </button>
         )}
       </div>
 
-      {/* Input oculto para seleccionar fotos */}
       {isAdmin && <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={subirFotos} />}
 
-      {/* Barra de progreso mientras sube */}
       {uploading && (
         <div style={{ margin: "0 24px 16px" }}>
           <div style={{ background: C.card, borderRadius: 14, padding: "16px 18px", border: "1px solid rgba(0,194,224,0.2)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
               <div style={{ fontSize: 13, color: C.cyan, fontWeight: 700 }}>Subiendo fotos...</div>
-              <div style={{ fontSize: 13, color: C.cyan, fontWeight: 700 }}>{subidas}/{totalSubir}</div>
+              <div style={{ fontSize: 13, color: C.cyan, fontWeight: 700 }}>{progreso}%</div>
             </div>
             <div style={{ background: C.surface, borderRadius: 6, height: 8, overflow: "hidden" }}>
               <div style={{ height: "100%", width: progreso + "%", background: "linear-gradient(90deg,#00C2E0,#00C896)", borderRadius: 6, transition: "width 0.3s" }} />
             </div>
-            <div style={{ fontSize: 11, color: C.muted, marginTop: 8 }}>{progreso}% completado</div>
           </div>
         </div>
       )}
 
-      {/* Banner informativo para admin */}
       {isAdmin && !uploading && (
         <div style={{ margin: "0 24px 16px" }}>
           <div style={{ background: C.goldDim, borderRadius: 12, padding: "11px 16px", border: "1px solid rgba(240,165,0,0.2)", display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 16 }}>👑</span>
-            <div style={{ fontSize: 12, color: C.gold, fontWeight: 600 }}>Modo admin — toca "+ Subir" para agregar múltiples fotos</div>
+            <div style={{ fontSize: 12, color: C.gold, fontWeight: 600 }}>Modo admin — toca "+ Subir" para agregar fotos</div>
           </div>
         </div>
       )}
 
-      {/* Estados: cargando / vacío / grid */}
       {loading ? (
         <div style={{ textAlign: "center", padding: "80px 24px", color: C.muted }}>
           <div style={{ fontSize: 44, marginBottom: 16 }}>📸</div>
@@ -271,25 +241,16 @@ function Galeria({ onBack, isAdmin }) {
         </div>
       )}
 
-      {/* Modal foto ampliada + descarga */}
       {fotoAmpliada && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.96)", zIndex: 200, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}
           onClick={function(e) { if (e.target === e.currentTarget) setFotoAmpliada(null); }}>
-
-          {/* Cerrar */}
           <div style={{ position: "absolute", top: 52, right: 24, width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 18, color: "#FFF" }}
             onClick={function() { setFotoAmpliada(null); }}>✕</div>
-
-          {/* Contador */}
           <div style={{ position: "absolute", top: 62, left: 0, right: 0, textAlign: "center", fontSize: 12, color: "rgba(255,255,255,0.35)", fontWeight: 600 }}>
             {idxAmpliada + 1} / {fotos.length}
           </div>
-
-          {/* Imagen */}
           <img src={fotoAmpliada.url} alt="Foto ampliada"
             style={{ maxWidth: "94vw", maxHeight: "68vh", objectFit: "contain", borderRadius: 10 }} />
-
-          {/* Botón descargar */}
           <div style={{ marginTop: 20, display: "flex", gap: 12, padding: "0 24px", width: "100%", maxWidth: 430, boxSizing: "border-box" }}>
             <button
               style={{ flex: 1, padding: "15px 20px", borderRadius: 16, background: "linear-gradient(135deg,#FF3D5A,#D4002D)", color: "#FFF", fontSize: 15, fontWeight: 700, border: "none", cursor: descargando ? "not-allowed" : "pointer", fontFamily: "inherit", opacity: descargando ? 0.6 : 1 }}
@@ -299,8 +260,6 @@ function Galeria({ onBack, isAdmin }) {
             <button style={{ padding: "15px 18px", borderRadius: 16, background: "rgba(255,255,255,0.08)", color: "#FFF", fontSize: 15, border: "none", cursor: "pointer", fontFamily: "inherit" }}
               onClick={function() { setFotoAmpliada(null); }}>Cerrar</button>
           </div>
-
-          {/* Navegar ← → */}
           {idxAmpliada > 0 && (
             <div style={{ position: "absolute", top: "50%", left: 8, transform: "translateY(-50%)" }}>
               <div style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 24, color: "#FFF" }}
@@ -671,7 +630,6 @@ export default function App() {
     );
   }
 
-  // ── SPLASH ──
   if (scr === "splash") return W(
     <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", height: "100vh", padding: 24 }}>
       <div style={{ position: "absolute", top: "10%", left: "50%", transform: "translateX(-50%)", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,61,90,0.08), transparent 70%)", pointerEvents: "none" }} />
@@ -688,7 +646,6 @@ export default function App() {
     </div>
   );
 
-  // ── LOGIN ──
   if (scr === "login") return W(
     <div style={{ padding: "0 24px 40px", minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center" }}>
       <div style={{ marginBottom: 40 }}>
@@ -708,7 +665,6 @@ export default function App() {
     </div>
   );
 
-  // ── REGISTER ──
   if (scr === "register") return W(
     <div style={{ padding: "52px 24px 40px", maxHeight: "100vh", overflowY: "auto" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 32 }}>
@@ -755,7 +711,6 @@ export default function App() {
     </div>
   );
 
-  // ── WELCOME ──
   if (scr === "welcome" && userData) return W(
     <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", minHeight: "100vh", padding: 24, textAlign: "center" }}>
       <div style={{ width: 80, height: 80, borderRadius: 28, background: "linear-gradient(135deg, #00C896, #00A07A)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, marginBottom: 24 }}>✓</div>
@@ -769,7 +724,6 @@ export default function App() {
     </div>
   );
 
-  // ── BIENVENIDA AL EVENTO ──
   if (scr === "bienvenidaEvento" && inscripcionData) return W(
     <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", minHeight: "100vh", padding: 24, textAlign: "center" }}>
       <div style={{ position: "absolute", top: "8%", left: "50%", transform: "translateX(-50%)", width: 280, height: 280, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,61,90,0.07), transparent 70%)" }} />
@@ -785,7 +739,6 @@ export default function App() {
     </div>
   );
 
-  // ── CERTIFICADO ──
   if (scr === "certificado" && inscripcionData) {
     var posGen = getPosGeneral(user ? user.uid : "");
     var posRamaC = getPosRama(user ? user.uid : "");
@@ -829,10 +782,8 @@ export default function App() {
     );
   }
 
-  // ── GALERÍA ──
   if (scr === "galeria") return W(<Galeria onBack={function() { go("app"); }} isAdmin={isAdmin} />);
 
-  // ── CARRERA ACTIVA ──
   if (scr === "carrera") return W(
     <CarreraActiva
       onTerminar={function(tiempo, actividad) {
@@ -843,7 +794,6 @@ export default function App() {
     />
   );
 
-  // ── REWARDS ──
   if (scr === "rewards") return W(
     <div style={{ padding: "0 24px 40px" }}>
       <div style={{ ...styles.header, padding: "52px 0 24px" }}>
@@ -883,7 +833,6 @@ export default function App() {
     </div>
   );
 
-  // ── MAP ──
   if (scr === "map") return W(
     <div style={{ padding: "0 24px 40px" }}>
       <div style={{ ...styles.header, padding: "52px 0 24px" }}>
@@ -914,7 +863,6 @@ export default function App() {
     </div>
   );
 
-  // ── MAIN APP ──
   if (scr === "app" && userData) return W(
     <div style={{ paddingBottom: 100 }}>
 
